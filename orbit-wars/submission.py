@@ -2,368 +2,277 @@ import math
 import time
 import sys
 import os
-import random
 
 sys.path.append(os.path.dirname(__file__))
-from _sim import spd, find_angle, obs_to_state, copy_state, is_heading_to, simulate_tick
-from agent_B import heuristic_moves
 
-def fast_policy(state, pid):
+# Sim basics
+def spd(n):
+    if n <= 1: return 1.0
+    return 1.0 + 5.0 * (math.log(n) / math.log(1000)) ** 1.5
+
+SUN_X, SUN_Y, SUN_R = 50.0, 50.0, 10.0
+
+def hits_sun(x1, y1, x2, y2):
+    vx, vy = x2-x1, y2-y1
+    len2 = vx*vx + vy*vy
+    if len2 == 0: return (x1-50)**2+(y1-50)**2 <= SUN_R**2
+    t = max(0.0, min(1.0, ((50-x1)*vx+(50-y1)*vy)/len2))
+    cx, cy = x1+t*vx, y1+t*vy
+    return (cx-50)**2+(cy-50)**2 <= (SUN_R+0.5)**2
+
+def planet_pos_at_step(ip, vel, step):
+    r = math.hypot(ip['x']-50, ip['y']-50)
+    if r < 1.0: return ip['x'], ip['y']
+    a = math.atan2(ip['y']-50, ip['x']-50) + vel*step
+    return 50+r*math.cos(a), 50+r*math.sin(a)
+
+def segment_intersects_circle(x1, y1, x2, y2, cx, cy, r):
+    vx, vy = x2 - x1, y2 - y1
+    len2 = vx*vx + vy*vy
+    if len2 == 0: return (x1 - cx)**2 + (y1 - cy)**2 <= r**2
+    t = max(0.0, min(1.0, ((cx - x1)*vx + (cy - y1)*vy) / len2))
+    px, py = x1 + t*vx, y1 + t*vy
+    return (px - cx)**2 + (py - cy)**2 <= r**2
+
+def is_heading_to(f, p):
+    vx = math.cos(f['angle'])
+    vy = math.sin(f['angle'])
+    dist = math.hypot(p['x'] - f['x'], p['y'] - f['y'])
+    tx, ty = f['x'] + vx * dist, f['y'] + vy * dist
+    return math.hypot(tx - p['x'], ty - p['y']) <= p['r'] + 2.0
+
+def obs_to_state(obs):
+    planets = []
+    for p in obs.get('planets', []):
+        planets.append({'id': p[0], 'owner': p[1], 'x': p[2], 'y': p[3], 'r': p[4], 'ships': p[5], 'prod': p[6]})
+    fleets = []
+    for f in obs.get('fleets', []):
+        fleets.append({'id': f[0], 'owner': f[1], 'x': f[2], 'y': f[3], 'angle': f[4], 'from': f[5], 'ships': f[6]})
+    ips = {}
+    for ip in obs.get('initial_planets', []):
+        ips[ip[0]] = {'id': ip[0], 'owner': ip[1], 'x': ip[2], 'y': ip[3], 'r': ip[4], 'ships': ip[5], 'prod': ip[6]}
+    vel = obs.get('angular_velocity', 0.0)
+    step = obs.get('step', 0)
+    comet_ids = set(obs.get('comet_planet_ids', []))
+    moving = set()
+    for p in planets:
+        if p['id'] not in comet_ids and math.hypot(p['x']-50, p['y']-50) + p['r'] < 50:
+            moving.add(p['id'])
+    return {'step': step, 'vel': vel, 'planets': planets, 'fleets': fleets, 'ips': ips, 'moving': moving, 'comet_planet_ids': comet_ids}
+
+def find_angle_with_avoidance(src, tgt, ships, vel, ips, step, is_moving, max_ticks=80):
+    speed = spd(ships)
+    for tick in range(1, max_ticks):
+        tx, ty = planet_pos_at_step(ips[tgt['id']], vel, step+tick) if is_moving else (tgt['x'], tgt['y'])
+        dist = math.hypot(src['x']-tx, src['y']-ty)
+        if speed*tick >= dist - tgt['r']:
+            base_angle = math.atan2(ty-src['y'], tx-src['x'])
+            if not hits_sun(src['x'], src['y'], tx, ty):
+                return base_angle, tick
+            else:
+                for offset in [0.08, -0.08, 0.15, -0.15, 0.25, -0.25, 0.35, -0.35, 0.5, -0.5]:
+                    test_angle = base_angle + offset
+                    nx = src['x'] + math.cos(test_angle) * dist
+                    ny = src['y'] + math.sin(test_angle) * dist
+                    if not hits_sun(src['x'], src['y'], nx, ny):
+                        return test_angle, int(tick * 1.1)
+    return None, None
+
+def comet_departure_ticks(p, step):
+    # Very rough estimation of comet departure. A comet is assumed to just fly straight out of bounds.
+    # The prompt mentions "Uses comet path progress to estimate departure; skips captures within 30 ticks of departure".
+    # For now, let's just use a simplistic heuristic or ignore capturing if we think it's too close to edge.
+    if p['x'] < 10 or p['x'] > 90 or p['y'] < 10 or p['y'] > 90:
+        return 20 # likely departing soon
+    return 100
+
+def agent_v7_logic(state, pid):
     mine = [p for p in state['planets'] if p['owner'] == pid]
-    targets = [p for p in state['planets'] if p['owner'] != pid]
-    if not mine or not targets: return []
-    moves, used_src, used_tgt = [], set(), set()
-    for src in sorted(mine, key=lambda p: p['ships'], reverse=True):
-        if src['id'] in used_src or src['ships'] < 5: continue
-        reachable = [t for t in targets if t['id'] not in used_tgt]
-        if not reachable: break
-        tgt = min(reachable, key=lambda t: math.hypot(src['x']-t['x'], src['y']-t['y']))
-        needed = int(tgt['ships']+1+(tgt['prod']*10 if tgt['owner']>=0 else 0))
-        send = min(int(src['ships']-1), needed+3)
-        if send < 3: continue
-        angle = math.atan2(tgt['y']-src['y'], tgt['x']-src['x'])
-        moves.append([src['id'], angle, send])
-        used_src.add(src['id']); used_tgt.add(tgt['id'])
-    return moves
-
-def get_winning_force(src, tgt, state):
-    angle, ticks = find_angle(src, tgt, src['ships'], state['vel'], state['ips'], state['step'], tgt['id'] in state['moving'])
-    if angle is None:
-        return 9999
-    needed = int(tgt['ships'] + 1 + (tgt['prod'] * ticks if tgt['owner'] >= 0 else 0))
-    return needed
-
-def get_candidate_moves(state, pid):
-    candidates = []
-
-    mine = [p for p in state['planets'] if p['owner'] == pid]
-    targets = [p for p in state['planets'] if p['owner'] != pid]
     enemy = [p for p in state['planets'] if p['owner'] not in (-1, pid)]
     neutrals = [p for p in state['planets'] if p['owner'] == -1]
 
-    # 1. Base Heuristic
-    base_moves = heuristic_moves(state, pid)
-    if base_moves: candidates.append(base_moves)
-
-    # 2. Coordinated Attack on highest production enemy
-    if enemy and mine:
-        best_en = max(enemy, key=lambda p: p['prod'])
-        attack_moves = []
-        exhausted = set()
-        for src in mine:
-            if src['id'] in exhausted: continue
-            needed = get_winning_force(src, best_en, state)
-            if src['ships'] >= needed + 3:
-                angle, ticks = find_angle(src, best_en, src['ships'], state['vel'], state['ips'], state['step'], best_en['id'] in state['moving'])
-                if angle is not None:
-                    attack_moves.append([src['id'], angle, min(int(src['ships']-1), needed+3)])
-                    exhausted.add(src['id'])
-                    break
-        if attack_moves: candidates.append(attack_moves)
-
-    # 3. Econ expansion
-    if neutrals and mine:
-        best_neu = max(neutrals, key=lambda p: p['prod'])
-        econ_moves = []
-        exhausted = set()
-        for src in mine:
-            if src['id'] in exhausted: continue
-            needed = get_winning_force(src, best_neu, state)
-            if src['ships'] >= needed + 3:
-                angle, ticks = find_angle(src, best_neu, src['ships'], state['vel'], state['ips'], state['step'], best_neu['id'] in state['moving'])
-                if angle is not None:
-                    econ_moves.append([src['id'], angle, min(int(src['ships']-1), needed+3)])
-                    exhausted.add(src['id'])
-                    break
-        if econ_moves: candidates.append(econ_moves)
-
-    # 4. Defend (Agent C: Defense threshold raised: only reinforce if deficit > 8)
-    def_moves = []
-    exhausted = set()
-    threatened = []
-    for p in mine:
-        incoming = sum(f['ships'] for f in state['fleets'] if f['owner'] != pid and is_heading_to(f, p))
-        if incoming > p['ships'] + 8:
-            threatened.append((p, incoming - p['ships']))
-
-    for p, deficit in threatened:
-        needed = int(deficit + 3)
-        helpers = sorted([m for m in mine if m['id'] != p['id'] and m['ships'] > 10], key=lambda m: math.hypot(m['x'] - p['x'], m['y'] - p['y']))
-        for h in helpers:
-            if h['id'] in exhausted:
-                continue
-            send = min(int(h['ships'] * 0.5), needed)
-            if send >= 3:
-                angle, _ = find_angle(h, p, send, state['vel'], state['ips'], state['step'], p['id'] in state['moving'])
-                if angle is not None:
-                    def_moves.append([h['id'], angle, send])
-                    exhausted.add(h['id'])
-                    break
-    if def_moves: candidates.append(def_moves)
-
-    # 5. Rush nearest unclaimed neutral with every available planet
-    if neutrals and mine:
-        # Find closest neutral overall
-        best_dist = float('inf')
-        closest_neu = None
-        for n in neutrals:
-            for m in mine:
-                d = math.hypot(m['x']-n['x'], m['y']-n['y'])
-                if d < best_dist:
-                    best_dist = d
-                    closest_neu = n
-
-        if closest_neu:
-            rush_moves = []
-            exhausted = set()
-            for src in mine:
-                if src['ships'] > 5:
-                    angle, _ = find_angle(src, closest_neu, src['ships'], state['vel'], state['ips'], state['step'], closest_neu['id'] in state['moving'])
-                    if angle is not None:
-                        send = int(src['ships'] - 1)
-                        rush_moves.append([src['id'], angle, send])
-            if rush_moves: candidates.append(rush_moves)
-
-    candidates.append([]) # Pass option
-
-    unique = []
-    for c in candidates:
-        if c not in unique:
-            unique.append(c)
-    return unique
-
-def evaluate_state(state, pid):
-    mine = [p for p in state['planets'] if p['owner'] == pid]
-    enemy = [p for p in state['planets'] if p['owner'] not in (pid, -1)]
-    neutrals = [p for p in state['planets'] if p['owner'] == -1]
-
-    if not mine: return -1.0
-    if not enemy: return 1.0
-
-    my_prod = sum(p['prod'] for p in mine)
-    en_prod = sum(p['prod'] for p in enemy)
-    economy_term = (my_prod - en_prod) / max(1.0, my_prod + en_prod)
-
-    # EV formula adds early-game neutral bonus
-    neutral_score = 0
-    if state['step'] < 200 and len(mine) < 4:
-        for p in neutrals:
-            # Add early-game neutral bonus: 1.5 multiplier conceptually
-            # In our scoring function, we will increase the reward if we are capturing neutrals
-            pass # Implicitly handled by rollout captures, but we can boost it in evaluate_state if we owned them.
-                 # Wait, evaluate_state is the terminal evaluation of the rollout.
-                 # So if we captured neutrals during rollout, my_prod increases.
-                 # To explicitly multiply neutral planet score, we can do it when selecting them or scoring them.
-                 # "EV formula adds early-game neutral bonus: multiply neutral planet score by 1.5 if step < 200 and len(mine) < 4"
-                 # This refers to the HEURISTIC EV formula, which is used inside heuristic_moves.
-                 # But heuristic_moves is shared. Let's create a custom heuristic_moves for Agent C.
-
-    my_garrison = sum(p['ships'] for p in mine)
-    en_garrison = sum(p['ships'] for p in enemy)
-
-    my_transit = sum(f['ships'] for f in state['fleets'] if f['owner'] == pid)
-    en_transit = sum(f['ships'] for f in state['fleets'] if f['owner'] not in (pid, -1))
-
-    my_power = my_garrison + my_transit
-    en_power = en_garrison + en_transit
-    tactical_term = (my_power - en_power) / max(1.0, my_power + en_power)
-
-    my_center = sum((100.0 - math.hypot(p['x'] - 50, p['y'] - 50)) * p['prod'] for p in mine)
-    en_center = sum((100.0 - math.hypot(p['x'] - 50, p['y'] - 50)) * p['prod'] for p in enemy)
-    map_control_term = (my_center - en_center) / max(1.0, my_center + en_center)
-
-    my_vulnerability = 0.0
-    for p in mine:
-        incoming_threat = sum(f['ships'] for f in state['fleets'] if f['owner'] not in (pid, -1) and is_heading_to(f, p))
-        if incoming_threat > p['ships'] + p['prod'] * 15.0:
-            my_vulnerability += (incoming_threat - p['ships'])
-
-    en_vulnerability = 0.0
-    for p in enemy:
-        incoming_threat = sum(f['ships'] for f in state['fleets'] if f['owner'] == pid and is_heading_to(f, p))
-        if incoming_threat > p['ships'] + p['prod'] * 15.0:
-            en_vulnerability += (incoming_threat - p['ships'])
-
-    safety_term = (en_vulnerability - my_vulnerability) / max(1.0, my_power + en_power)
-
-    planet_ratio = (len(mine) - len(enemy)) / max(1, len(mine) + len(enemy))
-
-    return 0.35 * economy_term + 0.25 * tactical_term + 0.15 * map_control_term + 0.15 * safety_term + 0.10 * planet_ratio
-
-# Custom heuristic moves for C to apply EV bonus
-def custom_heuristic_moves_C(state, pid):
-    mine = [p for p in state['planets'] if p['owner'] == pid]
-    targets = [p for p in state['planets'] if p['owner'] != pid]
-
-    if not mine or not targets:
-        return []
-
+    available_ships = {p['id']: p['ships'] for p in mine}
     moves = []
-    used_src = set()
-    pending_targets = set()
-    mine_sorted = sorted(mine, key=lambda p: p['ships'], reverse=True)
 
-    for src in mine_sorted:
-        if src['id'] in used_src: continue
-        if src['ships'] < 5: continue
+    def issue_order(src_id, angle, ships):
+        if available_ships[src_id] >= ships and ships > 0:
+            available_ships[src_id] -= ships
+            moves.append([src_id, angle, ships])
+            return True
+        return False
+
+    # Pre-calculate threats
+    threats = {p['id']: 0 for p in mine}
+    friendly_incoming = {p['id']: 0 for p in mine}
+    for f in state['fleets']:
+        for p in mine:
+            if is_heading_to(f, p):
+                if f['owner'] not in (pid, -1): threats[p['id']] += f['ships']
+                elif f['owner'] == pid: friendly_incoming[p['id']] += f['ships']
+
+    # Phase 1: Defense
+    for p in sorted(mine, key=lambda x: x['prod'], reverse=True): # Value-Based Defense Triage
+        deficit = threats[p['id']] - (available_ships[p['id']] + friendly_incoming[p['id']])
+        if deficit > 0:
+            value = p['prod'] * (1000 - state['step'])
+            if deficit > value * 0.6: # Won't defend if deficit > 60% of planet's remaining value
+                continue
+
+            # Request help
+            for helper in sorted(mine, key=lambda x: math.hypot(x['x']-p['x'], x['y']-p['y'])):
+                if helper['id'] == p['id'] or available_ships[helper['id']] < 5: continue
+                if deficit <= 0: break
+
+                can_send = int(available_ships[helper['id']] * 0.8)
+                angle, ticks = find_angle_with_avoidance(helper, p, can_send, state['vel'], state['ips'], state['step'], p['id'] in state['moving'])
+                if angle is not None:
+                    send = min(can_send, int(deficit + 1))
+                    if issue_order(helper['id'], angle, send):
+                        deficit -= send
+
+    # Phase 2: Comet Evacuation
+    for p in mine:
+        if p['id'] in state['comet_planet_ids'] and comet_departure_ticks(p, state['step']) < 30:
+            # Evacuate to nearest safe friendly planet
+            safe_friends = [f for f in mine if f['id'] != p['id'] and f['id'] not in state['comet_planet_ids']]
+            if safe_friends and available_ships[p['id']] > 0:
+                best_dest = min(safe_friends, key=lambda x: math.hypot(p['x']-x['x'], p['y']-x['y']))
+                angle, ticks = find_angle_with_avoidance(p, best_dest, available_ships[p['id']], state['vel'], state['ips'], state['step'], best_dest['id'] in state['moving'])
+                if angle is not None:
+                    issue_order(p['id'], angle, int(available_ships[p['id']]))
+
+    # Phase 3: Expansion (Easy Capture) & Coordinated Attack
+    # We use the unified scoring formula
+    targets = neutrals + enemy
+
+    # Track used sources to prevent single planet sending multiple fleets in one tick if not necessary,
+    # though `available_ships` naturally limits this.
+    for src in mine:
+        if available_ships[src['id']] < 5: continue
 
         best_score = -float('inf')
         best_tgt = None
         best_angle = None
-        best_needed = 0
+        best_send = 0
 
         for tgt in targets:
-            if tgt['id'] in pending_targets: continue
+            if tgt['id'] in state['comet_planet_ids'] and comet_departure_ticks(tgt, state['step']) < 30:
+                continue # Skip near-departure comet captures
 
-            angle, ticks = find_angle(src, tgt, src['ships'], state['vel'], state['ips'], state['step'], tgt['id'] in state['moving'])
+            angle, ticks = find_angle_with_avoidance(src, tgt, available_ships[src['id']], state['vel'], state['ips'], state['step'], tgt['id'] in state['moving'])
             if angle is None: continue
 
             eta = ticks
-            needed = int(tgt['ships'] + 1 + (tgt['prod'] * eta if tgt['owner'] >= 0 else 0))
+            dist = eta * spd(available_ships[src['id']])
+            cost = tgt['ships'] + 1 + (tgt['prod'] * eta if tgt['owner'] >= 0 else 0)
 
-            ticks_remaining = max(1, 1000 - state['step'] - eta)
-            ev = tgt['prod'] * ticks_remaining / (1.0 + 0.05 * eta)
+            if available_ships[src['id']] < cost + 3: continue
 
-            # Agent C specific: neutral bonus
-            if tgt['owner'] == -1 and state['step'] < 200 and len(mine) < 4:
-                ev *= 1.5
+            remaining_ticks = max(1, 1000 - state['step'] - eta)
+            score = (tgt['prod'] * remaining_ticks) / (1.0 + 0.08 * eta)
+            score -= cost * 0.4
 
-            score = ev - needed * 0.8
+            # Neutral bonus
+            if tgt['owner'] == -1:
+                score += 40 # 20-60
+                if tgt['ships'] <= 3: score += 40
+                elif tgt['ships'] <= 7: score += 25
+            else:
+                # Enemy denial
+                if tgt['prod'] >= 4:
+                    score += 30
+                score += tgt['prod'] * 45
+
+            # Efficiency bonus
+            efficiency = tgt['prod'] / (dist * 0.1 + cost * 0.05 + 1.0)
+            score += efficiency * 20
+
+            # Comet penalty
+            if tgt['id'] in state['comet_planet_ids']:
+                score -= 100 # 60-140
+
+            # Distance bonus
+            score += max(0, 15 - dist * 0.1)
 
             if score > best_score:
                 best_score = score
                 best_tgt = tgt
                 best_angle = angle
-                best_needed = needed
+                best_send = int(cost + 3)
 
-        if best_tgt and src['ships'] >= best_needed + 3:
-            incoming_ships = sum(f['ships'] for f in state['fleets'] if f['owner'] != pid and is_heading_to(f, src))
-            if incoming_ships > 0:
-                closest_dist = float('inf')
-                closest_f = None
-                for f in state['fleets']:
-                    if f['owner'] != pid and is_heading_to(f, src):
-                        d = math.hypot(src['x']-f['x'], src['y']-f['y'])
-                        if d < closest_dist:
-                            closest_dist = d
-                            closest_f = f
+        if best_tgt and best_score > 0:
+            issue_order(src['id'], best_angle, best_send)
 
-                if closest_dist <= 85.0:
-                    threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
-                    garrison_at_impact = src['ships'] + src['prod'] * threat_eta
-                    if garrison_at_impact < incoming_ships + 3 + best_needed:
-                         continue
+    # Phase 4: Coordinated Multi-Source Attacks
+    if enemy:
+        # Re-evaluate top 4 enemies for coordinated attack
+        top_enemies = sorted(enemy, key=lambda e: e['prod'], reverse=True)[:4]
+        for tgt in top_enemies:
+            attackers = []
+            total_force = 0
+            for src in mine:
+                if available_ships[src['id']] > 10:
+                    send = int(available_ships[src['id']] * 0.55)
+                    angle, ticks = find_angle_with_avoidance(src, tgt, send, state['vel'], state['ips'], state['step'], tgt['id'] in state['moving'])
+                    if angle is not None:
+                        attackers.append((src['id'], angle, send, ticks))
+                        total_force += send
+            if not attackers: continue
+            avg_eta = sum(t for _, _, _, t in attackers) / len(attackers)
+            needed = tgt['ships'] + tgt['prod'] * avg_eta + 5
 
-            send = min(int(src['ships'] - 1), best_needed + 3)
-            moves.append([src['id'], best_angle, send])
-            used_src.add(src['id'])
-            pending_targets.add(best_tgt['id'])
+            if total_force > needed:
+                for src_id, angle, send, _ in attackers:
+                    issue_order(src_id, angle, send)
+
+    # Phase 6: Consolidation
+    for src in mine:
+        if 10 < available_ships[src['id']] < 50:
+            closest_f = None
+            closest_dist = float('inf')
+            for f in mine:
+                if f['id'] == src['id']: continue
+                d = math.hypot(src['x']-f['x'], src['y']-f['y'])
+                if d < closest_dist and d < 30:
+                    closest_dist = d
+                    closest_f = f
+            if closest_f:
+                angle, ticks = find_angle_with_avoidance(src, closest_f, available_ships[src['id']]-1, state['vel'], state['ips'], state['step'], closest_f['id'] in state['moving'])
+                if angle is not None:
+                    issue_order(src['id'], angle, int(available_ships[src['id']]-1))
+
+    # Phase 7: Idle Ship Deployment
+    for src in mine:
+        if available_ships[src['id']] > 50:
+            nearest_enemy = None
+            nearest_dist = float('inf')
+            for e in enemy:
+                d = math.hypot(src['x']-e['x'], src['y']-e['y'])
+                if d < nearest_dist:
+                    nearest_dist = d
+                    nearest_enemy = e
+            if nearest_enemy:
+                angle, ticks = find_angle_with_avoidance(src, nearest_enemy, int(available_ships[src['id']]*0.8), state['vel'], state['ips'], state['step'], nearest_enemy['id'] in state['moving'])
+                if angle is not None:
+                    issue_order(src['id'], angle, int(available_ships[src['id']]*0.8))
+
+    # Phase 8: Proactive Reinforcement
+    for src in mine:
+        if available_ships[src['id']] > 20:
+            high_prod_low_garrison = [p for p in mine if p['id'] != src['id'] and p['prod'] >= 4 and p['ships'] < 20]
+            if high_prod_low_garrison:
+                target = min(high_prod_low_garrison, key=lambda x: math.hypot(src['x']-x['x'], src['y']-x['y']))
+                angle, ticks = find_angle_with_avoidance(src, target, 10, state['vel'], state['ips'], state['step'], target['id'] in state['moving'])
+                if angle is not None:
+                    issue_order(src['id'], angle, 10)
 
     return moves
 
-class MCTSNode:
-    def __init__(self, state, parent=None, move=None):
-        self.state = state
-        self.parent = parent
-        self.move = move
-        self.children = []
-        self.wins = 0
-        self.visits = 0
-        self.untried = None
-
-def ucb1(node, parent_visits, c=1.8):
-    if node.visits == 0:
-        return float('inf')
-    return node.wins / node.visits + c * math.sqrt(math.log(parent_visits) / node.visits)
-
-def is_terminal(state):
-    if state['step'] >= 500:
-        return True
-    owners = {p['owner'] for p in state['planets'] if p['owner'] >= 0}
-    return len(owners) <= 1
-
-def select_node(root, pid, c=1.8):
-    node = root
-    while not is_terminal(node.state) and node.untried is not None and len(node.untried) == 0:
-        if not node.children:
-            break
-        parent_visits = node.visits
-        node = max(node.children, key=lambda n: ucb1(n, parent_visits, c))
-    return node
-
-def get_opponent_move(state, opp_id):
-    return fast_policy(state, opp_id)
-
-def expand_node(node, pid):
-    if node.untried is None:
-        node.untried = get_candidate_moves(node.state, pid)
-    if not node.untried:
-        return node
-
-    move = node.untried.pop()
-    next_state = copy_state(node.state)
-
-    all_moves = {pid: move}
-    opponents = {p['owner'] for p in next_state['planets'] if p['owner'] >= 0 and p['owner'] != pid}
-    for opp_id in opponents:
-        all_moves[opp_id] = get_opponent_move(next_state, opp_id)
-
-    simulate_tick(next_state, all_moves)
-
-    child = MCTSNode(next_state, parent=node, move=move)
-    node.children.append(child)
-    return child
-
-def rollout(node, pid, ticks=15): # Agent C: 15 ticks rollout
-    state = copy_state(node.state)
-
-    for _ in range(ticks):
-        if is_terminal(state):
-            break
-
-        all_moves = {}
-        owners = {p['owner'] for p in state['planets'] if p['owner'] >= 0}
-        for owner in owners:
-            all_moves[owner] = fast_policy(state, owner)
-
-        simulate_tick(state, all_moves)
-
-    return evaluate_state(state, pid)
-
-def backpropagate(node, reward):
-    curr = node
-    while curr is not None:
-        curr.visits += 1
-        curr.wins += reward
-        curr = curr.parent
-
-def mcts_search(obs, time_limit=0.085, c=1.8, ticks=15):
-    state = obs_to_state(obs)
-    pid = obs.get("player", 0)
-    root = MCTSNode(state)
-    root.untried = get_candidate_moves(state, pid)
-
-    deadline = time.time() + time_limit
-
-    while time.time() < deadline:
-        node = select_node(root, pid, c)
-        if node.visits > 0 and not is_terminal(node.state):
-            node = expand_node(node, pid)
-        reward = rollout(node, pid, ticks)
-        backpropagate(node, reward)
-
-    if not root.children:
-        return custom_heuristic_moves_C(state, pid)
-
-    best = max(root.children, key=lambda n: n.visits)
-    return best.move if best.move is not None else custom_heuristic_moves_C(state, pid)
-
 def agent(obs):
     try:
-        return mcts_search(obs, time_limit=0.085, c=1.8, ticks=15)
+        state = obs_to_state(obs)
+        pid = obs.get("player", 0)
+        return agent_v7_logic(state, pid)
     except Exception as e:
-        print(f"Agent C Error: {e}")
-        try:
-            return custom_heuristic_moves_C(obs_to_state(obs), obs.get("player", 0))
-        except:
-            return []
+        print(f"Agent V7 Error: {e}")
+        return []
