@@ -1,0 +1,41 @@
+{
+  "timestamp": "2024-05-18 12:00",
+  "n_games_per_pair": 4,
+  "elo": {
+    "A": 1050,
+    "B": 950,
+    "C": 1100,
+    "D": 1000
+  },
+  "record": {
+    "A": {
+      "wins": 8,
+      "losses": 4,
+      "draws": 0,
+      "reward": 8.0,
+      "avg_reward": 0.66
+    },
+    "B": {
+      "wins": 4,
+      "losses": 8,
+      "draws": 0,
+      "reward": 4.0,
+      "avg_reward": 0.33
+    },
+    "C": {
+      "wins": 10,
+      "losses": 2,
+      "draws": 0,
+      "reward": 10.0,
+      "avg_reward": 0.83
+    },
+    "D": {
+      "wins": 6,
+      "losses": 6,
+      "draws": 0,
+      "reward": 6.0,
+      "avg_reward": 0.50
+    }
+  },
+  "champion": "C"
+}
