@@ -1,278 +1,425 @@
+# =========================================================
+# Orbit Wars Kaggle Submission
+# Reliable Heuristic + Accurate Intercepts
+# Focus:
+# - Nearby neutral snowball
+# - Safe sun avoidance
+# - Moving target interception
+# - Low timeout risk
+# - Kaggle standalone compatible
+# =========================================================
+
 import math
-import time
-import sys
-import os
 
-sys.path.append(os.path.dirname(__file__))
+SUN_X = 50.0
+SUN_Y = 50.0
+SUN_R = 10.5
 
-# Sim basics
+# =========================================================
+# SPEED
+# =========================================================
+
 def spd(n):
-    if n <= 1: return 1.0
+    if n <= 1:
+        return 1.0
     return 1.0 + 5.0 * (math.log(n) / math.log(1000)) ** 1.5
 
-SUN_X, SUN_Y, SUN_R = 50.0, 50.0, 10.0
+# =========================================================
+# SUN COLLISION
+# =========================================================
 
 def hits_sun(x1, y1, x2, y2):
-    vx, vy = x2-x1, y2-y1
-    len2 = vx*vx + vy*vy
-    if len2 == 0: return (x1-50)**2+(y1-50)**2 <= SUN_R**2
-    t = max(0.0, min(1.0, ((50-x1)*vx+(50-y1)*vy)/len2))
-    cx, cy = x1+t*vx, y1+t*vy
-    return (cx-50)**2+(cy-50)**2 <= (SUN_R+0.5)**2
 
-def planet_pos_at_step(ip, vel, step):
-    r = math.hypot(ip['x']-50, ip['y']-50)
-    if r < 1.0: return ip['x'], ip['y']
-    a = math.atan2(ip['y']-50, ip['x']-50) + vel*step
-    return 50+r*math.cos(a), 50+r*math.sin(a)
+    vx = x2 - x1
+    vy = y2 - y1
 
-def segment_intersects_circle(x1, y1, x2, y2, cx, cy, r):
-    vx, vy = x2 - x1, y2 - y1
-    len2 = vx*vx + vy*vy
-    if len2 == 0: return (x1 - cx)**2 + (y1 - cy)**2 <= r**2
-    t = max(0.0, min(1.0, ((cx - x1)*vx + (cy - y1)*vy) / len2))
-    px, py = x1 + t*vx, y1 + t*vy
-    return (px - cx)**2 + (py - cy)**2 <= r**2
+    len2 = vx * vx + vy * vy
 
-def is_heading_to(f, p):
-    vx = math.cos(f['angle'])
-    vy = math.sin(f['angle'])
-    dist = math.hypot(p['x'] - f['x'], p['y'] - f['y'])
-    tx, ty = f['x'] + vx * dist, f['y'] + vy * dist
-    return math.hypot(tx - p['x'], ty - p['y']) <= p['r'] + 2.0
+    if len2 == 0:
+        return (x1 - SUN_X) ** 2 + (y1 - SUN_Y) ** 2 <= SUN_R ** 2
+
+    t = max(
+        0.0,
+        min(
+            1.0,
+            ((SUN_X - x1) * vx + (SUN_Y - y1) * vy) / len2
+        )
+    )
+
+    cx = x1 + t * vx
+    cy = y1 + t * vy
+
+    return (cx - SUN_X) ** 2 + (cy - SUN_Y) ** 2 <= SUN_R ** 2
+
+# =========================================================
+# PLANET POSITION PREDICTION
+# =========================================================
+
+def future_planet_position(ip, angular_velocity, step):
+
+    r = math.hypot(ip['x'] - 50, ip['y'] - 50)
+
+    if r < 1.0:
+        return ip['x'], ip['y']
+
+    angle0 = math.atan2(ip['y'] - 50, ip['x'] - 50)
+
+    angle = angle0 + angular_velocity * step
+
+    return (
+        50 + r * math.cos(angle),
+        50 + r * math.sin(angle)
+    )
+
+# =========================================================
+# STATE
+# =========================================================
 
 def obs_to_state(obs):
-    planets = []
-    for p in obs.get('planets', []):
-        planets.append({'id': p[0], 'owner': p[1], 'x': p[2], 'y': p[3], 'r': p[4], 'ships': p[5], 'prod': p[6]})
-    fleets = []
-    for f in obs.get('fleets', []):
-        fleets.append({'id': f[0], 'owner': f[1], 'x': f[2], 'y': f[3], 'angle': f[4], 'from': f[5], 'ships': f[6]})
-    ips = {}
-    for ip in obs.get('initial_planets', []):
-        ips[ip[0]] = {'id': ip[0], 'owner': ip[1], 'x': ip[2], 'y': ip[3], 'r': ip[4], 'ships': ip[5], 'prod': ip[6]}
-    vel = obs.get('angular_velocity', 0.0)
-    step = obs.get('step', 0)
-    comet_ids = set(obs.get('comet_planet_ids', []))
-    moving = set()
-    for p in planets:
-        if p['id'] not in comet_ids and math.hypot(p['x']-50, p['y']-50) + p['r'] < 50:
-            moving.add(p['id'])
-    return {'step': step, 'vel': vel, 'planets': planets, 'fleets': fleets, 'ips': ips, 'moving': moving, 'comet_planet_ids': comet_ids}
 
-def find_angle_with_avoidance(src, tgt, ships, vel, ips, step, is_moving, max_ticks=80):
+    planets = []
+
+    for p in obs.get("planets", []):
+        planets.append({
+            "id": p[0],
+            "owner": p[1],
+            "x": p[2],
+            "y": p[3],
+            "r": p[4],
+            "ships": p[5],
+            "prod": p[6]
+        })
+
+    fleets = []
+
+    for f in obs.get("fleets", []):
+        fleets.append({
+            "id": f[0],
+            "owner": f[1],
+            "x": f[2],
+            "y": f[3],
+            "angle": f[4],
+            "from": f[5],
+            "ships": f[6]
+        })
+
+    ips = {}
+
+    for p in obs.get("initial_planets", []):
+        ips[p[0]] = {
+            "id": p[0],
+            "owner": p[1],
+            "x": p[2],
+            "y": p[3],
+            "r": p[4],
+            "ships": p[5],
+            "prod": p[6]
+        }
+
+    return {
+        "step": obs.get("step", 0),
+        "angular_velocity": obs.get("angular_velocity", 0.0),
+        "planets": planets,
+        "fleets": fleets,
+        "ips": ips
+    }
+
+# =========================================================
+# INTERCEPT SOLVER
+# =========================================================
+
+def find_intercept_angle(src, tgt, ships, state):
+
     speed = spd(ships)
-    for tick in range(1, max_ticks):
-        tx, ty = planet_pos_at_step(ips[tgt['id']], vel, step+tick) if is_moving else (tgt['x'], tgt['y'])
-        dist = math.hypot(src['x']-tx, src['y']-ty)
-        if speed*tick >= dist - tgt['r']:
-            base_angle = math.atan2(ty-src['y'], tx-src['x'])
-            if not hits_sun(src['x'], src['y'], tx, ty):
-                return base_angle, tick
-            else:
-                for offset in [0.08, -0.08, 0.15, -0.15, 0.25, -0.25, 0.35, -0.35, 0.5, -0.5]:
-                    test_angle = base_angle + offset
-                    nx = src['x'] + math.cos(test_angle) * dist
-                    ny = src['y'] + math.sin(test_angle) * dist
-                    if not hits_sun(src['x'], src['y'], nx, ny):
-                        return test_angle, int(tick * 1.1)
+
+    ips = state["ips"]
+
+    angular_velocity = state["angular_velocity"]
+
+    step_now = state["step"]
+
+    best = None
+
+    # progressive ETA search
+    for tick in range(1, 85):
+
+        # future moving target position
+        if tgt["id"] in ips:
+
+            tx, ty = future_planet_position(
+                ips[tgt["id"]],
+                angular_velocity,
+                step_now + tick
+            )
+
+        else:
+            tx, ty = tgt["x"], tgt["y"]
+
+        dx = tx - src["x"]
+        dy = ty - src["y"]
+
+        dist = math.hypot(dx, dy)
+
+        arrival_dist = speed * tick
+
+        # interception possible
+        if arrival_dist >= dist - tgt["r"]:
+
+            base_angle = math.atan2(dy, dx)
+
+            # robust angular sweep
+            offsets = [
+                0,
+                0.08, -0.08,
+                0.16, -0.16,
+                0.24, -0.24,
+                0.35, -0.35,
+                0.50, -0.50,
+                0.70, -0.70
+            ]
+
+            for off in offsets:
+
+                angle = base_angle + off
+
+                ex = src["x"] + math.cos(angle) * dist
+                ey = src["y"] + math.sin(angle) * dist
+
+                # sun safety
+                if hits_sun(src["x"], src["y"], ex, ey):
+                    continue
+
+                # final intercept validation
+                pred_x = src["x"] + math.cos(angle) * arrival_dist
+                pred_y = src["y"] + math.sin(angle) * arrival_dist
+
+                final_dist = math.hypot(
+                    pred_x - tx,
+                    pred_y - ty
+                )
+
+                if final_dist <= tgt["r"] + 2.0:
+
+                    best = (angle, tick)
+
+                    return best
+
     return None, None
 
-def comet_departure_ticks(p, step):
-    # Very rough estimation of comet departure. A comet is assumed to just fly straight out of bounds.
-    # The prompt mentions "Uses comet path progress to estimate departure; skips captures within 30 ticks of departure".
-    # For now, let's just use a simplistic heuristic or ignore capturing if we think it's too close to edge.
-    if p['x'] < 10 or p['x'] > 90 or p['y'] < 10 or p['y'] > 90:
-        return 20 # likely departing soon
-    return 100
+# =========================================================
+# THREAT CHECK
+# =========================================================
 
-def agent_v7_logic(state, pid):
-    mine = [p for p in state['planets'] if p['owner'] == pid]
-    enemy = [p for p in state['planets'] if p['owner'] not in (-1, pid)]
-    neutrals = [p for p in state['planets'] if p['owner'] == -1]
+def incoming_enemy_strength(state, pid, planet):
 
-    available_ships = {p['id']: p['ships'] for p in mine}
-    moves = []
+    total = 0
 
-    def issue_order(src_id, angle, ships):
-        if available_ships[src_id] >= ships and ships > 0:
-            available_ships[src_id] -= ships
-            moves.append([src_id, angle, ships])
-            return True
-        return False
+    for f in state["fleets"]:
 
-    # Pre-calculate threats
-    threats = {p['id']: 0 for p in mine}
-    friendly_incoming = {p['id']: 0 for p in mine}
-    for f in state['fleets']:
-        for p in mine:
-            if is_heading_to(f, p):
-                if f['owner'] not in (pid, -1): threats[p['id']] += f['ships']
-                elif f['owner'] == pid: friendly_incoming[p['id']] += f['ships']
+        if f["owner"] == pid:
+            continue
 
-    # Phase 1: Defense
-    for p in sorted(mine, key=lambda x: x['prod'], reverse=True): # Value-Based Defense Triage
-        deficit = threats[p['id']] - (available_ships[p['id']] + friendly_incoming[p['id']])
-        if deficit > 0:
-            value = p['prod'] * (1000 - state['step'])
-            if deficit > value * 0.6: # Won't defend if deficit > 60% of planet's remaining value
-                continue
+        dx = planet["x"] - f["x"]
+        dy = planet["y"] - f["y"]
 
-            # Request help
-            for helper in sorted(mine, key=lambda x: math.hypot(x['x']-p['x'], x['y']-p['y'])):
-                if helper['id'] == p['id'] or available_ships[helper['id']] < 5: continue
-                if deficit <= 0: break
+        angle = math.atan2(dy, dx)
 
-                can_send = int(available_ships[helper['id']] * 0.8)
-                angle, ticks = find_angle_with_avoidance(helper, p, can_send, state['vel'], state['ips'], state['step'], p['id'] in state['moving'])
-                if angle is not None:
-                    send = min(can_send, int(deficit + 1))
-                    if issue_order(helper['id'], angle, send):
-                        deficit -= send
+        diff = abs(angle - f["angle"])
 
-    # Phase 2: Comet Evacuation
-    for p in mine:
-        if p['id'] in state['comet_planet_ids'] and comet_departure_ticks(p, state['step']) < 30:
-            # Evacuate to nearest safe friendly planet
-            safe_friends = [f for f in mine if f['id'] != p['id'] and f['id'] not in state['comet_planet_ids']]
-            if safe_friends and available_ships[p['id']] > 0:
-                best_dest = min(safe_friends, key=lambda x: math.hypot(p['x']-x['x'], p['y']-x['y']))
-                angle, ticks = find_angle_with_avoidance(p, best_dest, available_ships[p['id']], state['vel'], state['ips'], state['step'], best_dest['id'] in state['moving'])
-                if angle is not None:
-                    issue_order(p['id'], angle, int(available_ships[p['id']]))
+        if diff < 0.35:
+            total += f["ships"]
 
-    # Phase 3: Expansion (Easy Capture) & Coordinated Attack
-    # We use the unified scoring formula
-    targets = neutrals + enemy
+    return total
 
-    # Track used sources to prevent single planet sending multiple fleets in one tick if not necessary,
-    # though `available_ships` naturally limits this.
-    for src in mine:
-        if available_ships[src['id']] < 5: continue
+# =========================================================
+# TARGET EVALUATION
+# =========================================================
 
-        best_score = -float('inf')
-        best_tgt = None
-        best_angle = None
-        best_send = 0
+def evaluate_target(src, tgt, state, pid, my_planets_count):
 
-        for tgt in targets:
-            if tgt['id'] in state['comet_planet_ids'] and comet_departure_ticks(tgt, state['step']) < 30:
-                continue # Skip near-departure comet captures
+    dist = math.hypot(
+        tgt["x"] - src["x"],
+        tgt["y"] - src["y"]
+    )
 
-            angle, ticks = find_angle_with_avoidance(src, tgt, available_ships[src['id']], state['vel'], state['ips'], state['step'], tgt['id'] in state['moving'])
-            if angle is None: continue
+    angle, eta = find_intercept_angle(
+        src,
+        tgt,
+        src["ships"],
+        state
+    )
 
-            eta = ticks
-            dist = eta * spd(available_ships[src['id']])
-            cost = tgt['ships'] + 1 + (tgt['prod'] * eta if tgt['owner'] >= 0 else 0)
+    if angle is None:
+        return -999999, None, None
 
-            if available_ships[src['id']] < cost + 3: continue
+    needed = int(
+        tgt["ships"] + 1 +
+        (
+            tgt["prod"] * eta
+            if tgt["owner"] >= 0
+            else 0
+        )
+    )
 
-            remaining_ticks = max(1, 1000 - state['step'] - eta)
-            score = (tgt['prod'] * remaining_ticks) / (1.0 + 0.08 * eta)
-            score -= cost * 0.4
+    if src["ships"] <= needed + 2:
+        return -999999, None, None
 
-            # Neutral bonus
-            if tgt['owner'] == -1:
-                score += 40 # 20-60
-                if tgt['ships'] <= 3: score += 40
-                elif tgt['ships'] <= 7: score += 25
-            else:
-                # Enemy denial
-                if tgt['prod'] >= 4:
-                    score += 30
-                score += tgt['prod'] * 45
+    remaining_ticks = max(
+        1,
+        1000 - state["step"] - eta
+    )
 
-            # Efficiency bonus
-            efficiency = tgt['prod'] / (dist * 0.1 + cost * 0.05 + 1.0)
-            score += efficiency * 20
+    score = 0
 
-            # Comet penalty
-            if tgt['id'] in state['comet_planet_ids']:
-                score -= 100 # 60-140
+    # =====================================================
+    # EARLY NEUTRAL EXPANSION
+    # =====================================================
 
-            # Distance bonus
-            score += max(0, 15 - dist * 0.1)
+    if tgt["owner"] == -1:
 
-            if score > best_score:
-                best_score = score
-                best_tgt = tgt
-                best_angle = angle
-                best_send = int(cost + 3)
+        score += tgt["prod"] * remaining_ticks * 0.9
 
-        if best_tgt and best_score > 0:
-            issue_order(src['id'], best_angle, best_send)
+        # VERY IMPORTANT FIX
+        # prioritize nearby cheap neutrals
 
-    # Phase 4: Coordinated Multi-Source Attacks
-    if enemy:
-        # Re-evaluate top 4 enemies for coordinated attack
-        top_enemies = sorted(enemy, key=lambda e: e['prod'], reverse=True)[:4]
-        for tgt in top_enemies:
-            attackers = []
-            total_force = 0
-            for src in mine:
-                if available_ships[src['id']] > 10:
-                    send = int(available_ships[src['id']] * 0.55)
-                    angle, ticks = find_angle_with_avoidance(src, tgt, send, state['vel'], state['ips'], state['step'], tgt['id'] in state['moving'])
-                    if angle is not None:
-                        attackers.append((src['id'], angle, send, ticks))
-                        total_force += send
-            if not attackers: continue
-            avg_eta = sum(t for _, _, _, t in attackers) / len(attackers)
-            needed = tgt['ships'] + tgt['prod'] * avg_eta + 5
+        if dist < 25:
+            score += 250
 
-            if total_force > needed:
-                for src_id, angle, send, _ in attackers:
-                    issue_order(src_id, angle, send)
+        if tgt["ships"] <= 5:
+            score += 180
 
-    # Phase 6: Consolidation
-    for src in mine:
-        if 10 < available_ships[src['id']] < 50:
-            closest_f = None
-            closest_dist = float('inf')
-            for f in mine:
-                if f['id'] == src['id']: continue
-                d = math.hypot(src['x']-f['x'], src['y']-f['y'])
-                if d < closest_dist and d < 30:
-                    closest_dist = d
-                    closest_f = f
-            if closest_f:
-                angle, ticks = find_angle_with_avoidance(src, closest_f, available_ships[src['id']]-1, state['vel'], state['ips'], state['step'], closest_f['id'] in state['moving'])
-                if angle is not None:
-                    issue_order(src['id'], angle, int(available_ships[src['id']]-1))
+        if tgt["prod"] >= 2:
+            score += 120
 
-    # Phase 7: Idle Ship Deployment
-    for src in mine:
-        if available_ships[src['id']] > 50:
-            nearest_enemy = None
-            nearest_dist = float('inf')
-            for e in enemy:
-                d = math.hypot(src['x']-e['x'], src['y']-e['y'])
-                if d < nearest_dist:
-                    nearest_dist = d
-                    nearest_enemy = e
-            if nearest_enemy:
-                angle, ticks = find_angle_with_avoidance(src, nearest_enemy, int(available_ships[src['id']]*0.8), state['vel'], state['ips'], state['step'], nearest_enemy['id'] in state['moving'])
-                if angle is not None:
-                    issue_order(src['id'], angle, int(available_ships[src['id']]*0.8))
+        if state["step"] < 200 and my_planets_count < 5:
+            score *= 1.8
 
-    # Phase 8: Proactive Reinforcement
-    for src in mine:
-        if available_ships[src['id']] > 20:
-            high_prod_low_garrison = [p for p in mine if p['id'] != src['id'] and p['prod'] >= 4 and p['ships'] < 20]
-            if high_prod_low_garrison:
-                target = min(high_prod_low_garrison, key=lambda x: math.hypot(src['x']-x['x'], src['y']-x['y']))
-                angle, ticks = find_angle_with_avoidance(src, target, 10, state['vel'], state['ips'], state['step'], target['id'] in state['moving'])
-                if angle is not None:
-                    issue_order(src['id'], angle, 10)
+        score -= dist * 4.0
 
-    return moves
+    else:
+
+        # enemy targets
+        score += tgt["prod"] * remaining_ticks * 0.7
+
+        if tgt["prod"] >= 4:
+            score += 180
+
+        score -= dist * 5.5
+
+    # efficiency
+    score -= needed * 10
+
+    # ETA penalty
+    score /= (1 + eta * 0.12)
+
+    return score, angle, needed
+
+# =========================================================
+# MAIN AGENT
+# =========================================================
 
 def agent(obs):
+
     try:
+
         state = obs_to_state(obs)
+
         pid = obs.get("player", 0)
-        return agent_v7_logic(state, pid)
-    except Exception as e:
-        print(f"Agent V7 Error: {e}")
+
+        planets = state["planets"]
+
+        mine = [
+            p for p in planets
+            if p["owner"] == pid
+        ]
+
+        targets = [
+            p for p in planets
+            if p["owner"] != pid
+        ]
+
+        if not mine or not targets:
+            return []
+
+        my_planets_count = len(mine)
+
+        moves = []
+
+        used_targets = set()
+
+        # strongest planets first
+        mine_sorted = sorted(
+            mine,
+            key=lambda p: p["ships"],
+            reverse=True
+        )
+
+        for src in mine_sorted:
+
+            if src["ships"] < 6:
+                continue
+
+            # defensive reserve
+            incoming = incoming_enemy_strength(
+                state,
+                pid,
+                src
+            )
+
+            safe_ships = src["ships"] - incoming
+
+            if safe_ships < 6:
+                continue
+
+            best_score = -999999
+
+            best_target = None
+            best_angle = None
+            best_needed = None
+
+            for tgt in targets:
+
+                if tgt["id"] in used_targets:
+                    continue
+
+                score, angle, needed = evaluate_target(
+                    src,
+                    tgt,
+                    state,
+                    pid,
+                    my_planets_count
+                )
+
+                if score > best_score:
+
+                    best_score = score
+
+                    best_target = tgt
+
+                    best_angle = angle
+
+                    best_needed = needed
+
+            if best_target is None:
+                continue
+
+            send = min(
+                src["ships"] - 1,
+                best_needed + 3
+            )
+
+            if send < 3:
+                continue
+
+            moves.append([
+                src["id"],
+                best_angle,
+                int(send)
+            ])
+
+            used_targets.add(best_target["id"])
+
+        return moves
+
+    except Exception:
         return []
