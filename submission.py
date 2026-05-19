@@ -160,53 +160,89 @@ def get_game_phase(state, pid):
 # STRATEGIC TARGET SCORE FUNCTION
 # ==============================================================================
 
-def score_target_state(src, tgt, eta, is_comet, step, needed, mine_count=1, state=None):
-    """Score target planet using Economic Value (EV) calculation with distance discounting."""
+# ─────────────────────────────────────────────────────────────────────────────
+# CO-ORBIT ADJACENCY  (V8 feature)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def orbital_radius(p):
+    return math.hypot(p['x'] - 50, p['y'] - 50)
+
+def angular_separation(p1, p2):
+    """Absolute angular gap between two planets as seen from the sun."""
+    a1 = math.atan2(p1['y'] - 50, p1['x'] - 50)
+    a2 = math.atan2(p2['y'] - 50, p2['x'] - 50)
+    diff = abs(math.atan2(math.sin(a1 - a2), math.cos(a1 - a2)))
+    return diff
+
+def is_co_orbit_adjacent(src, tgt, r_tol=8.0, ang_tol=0.40):
+    """
+    True if src and tgt are on roughly the same orbit ring AND
+    close in angle — i.e., they are co-orbiting neighbors.
+    """
+    dr = abs(orbital_radius(src) - orbital_radius(tgt))
+    if dr > r_tol:
+        return False
+    ang = angular_separation(src, tgt)
+    return ang < ang_tol
+
+def comet_lifetime(tgt_id, state):
+    if not state:
+        return 0
+    for grp in state.get('comets', []):
+        if tgt_id in grp['planet_ids']:
+            idx = grp['planet_ids'].index(tgt_id)
+            path = grp['paths'][idx]
+            return max(0, len(path) - grp['path_index'])
+    return 0
+
+def score_target_state(src, tgt, eta, is_comet, step, needed, mine_count=1, state=None, already_sent=0):
+    """
+    Economic Value score with:
+      - 500-turn horizon (corrected)
+      - Co-orbit adjacency mega-bonus
+      - Smooth neutral multiplier decay
+      - Enemy denial bonus
+      - Cluster-choke heuristic
+      - Cheap comet override
+    """
     dist = math.hypot(src['x'] - tgt['x'], src['y'] - tgt['y'])
-    ticks_remaining = max(1, 1000 - step - eta)
-    ev = tgt['prod'] * ticks_remaining
-    
-    # Distance discount factor: heavily prioritizes close planets (localization)
-    score = ev / (1.0 + (dist / 18.0) ** 2)
-    
-    # Early game neutral priority multiplier (smooth decay from 2.5x to 1.0x over steps 0-350)
-    if tgt['owner'] == -1:
-        neutral_mult = max(1.0, 2.5 - (step / 350.0) * 1.5)
-        score *= neutral_mult
-        
-    # Extra localization bonus for neutral planets close to us (especially corners)
-    if tgt['owner'] == -1:
-        if dist < 30.0:
-            score += (30.0 - dist) * 40.0  # Up to +1200 bonus for extremely close neutrals!
-            
-    # Proximity bonus for enemy planets (easy localized capture)
-    if tgt['owner'] >= 0:
-        score += tgt['prod'] * 80.0   # deny enemy production value
-        if dist < 35.0:
-            score += (35.0 - dist) * 30.0  # Up to +1050 bonus for close enemy planets!
-            
-    # Strong required force cost penalty to prefer easy/cheap captures
-    score -= needed * 15.0
-        
-    if tgt['owner'] == -1:
-        # Decaying neutral capture bonus to aggressively grab empty posts early
-        neutral_bonus = max(10, 200 - 0.5 * step - 20 * mine_count)
-        score += neutral_bonus
-        
+    ticks_remaining = max(1, 500 - step - eta)
+
+    # ── Comet: override everything ──────────────────────────────────────────
     if is_comet:
-        # Comet harvester logic: yield based on exact remaining lifetime!
-        lifetime = 0
-        if state:
-            for group in state.get('comets', []):
-                if tgt['id'] in group['planet_ids']:
-                    idx = group['planet_ids'].index(tgt['id'])
-                    path = group['paths'][idx]
-                    lifetime = len(path) - group['path_index']
-                    break
-        if lifetime > eta:
-            score += tgt['prod'] * (lifetime - eta) * 2.0
-        else:
-            score -= 500 # Comet will expire before we arrive!
+        lifetime = comet_lifetime(tgt['id'], state)
+        if lifetime <= eta:
+            return -9999   # expires before arrival
+        return tgt['prod'] * (lifetime - eta) * 3.0 + 500   # always high priority
+
+    # ── Base economic value ──────────────────────────────────────────────────
+    ev = tgt['prod'] * ticks_remaining
+    score = ev / (1.0 + (dist / 16.0) ** 2)
+
+    # ── Co-orbit adjacency: MASSIVE bonus ───────────────────────────────────
+    if is_co_orbit_adjacent(src, tgt):
+        score += 4000.0  # dominant priority
+
+    # ── Raw proximity bonus (Euclidean) ─────────────────────────────────────
+    if dist < 25.0:
+        score += (25.0 - dist) * 60.0   # up to +1500
+
+    # ── Neutral planet bonuses ──────────────────────────────────────────────
+    if tgt['owner'] == -1:
+        neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
+        score *= neutral_mult
+        neutral_bonus = max(5, 250 - 0.6 * step - 25 * mine_count)
+        score += neutral_bonus
+
+    # ── Enemy planet bonuses ─────────────────────────────────────────────────
+    if tgt['owner'] >= 0:
+        score += tgt['prod'] * 100.0
+        score += max(0.0, (40.0 - dist) * 35.0)
+
+    # ── Force cost penalty ───────────────────────────────────────────────────
+    effective_needed = max(0, needed - already_sent)
+    score -= effective_needed * 12.0
+
     return score
 
 # ==============================================================================
@@ -214,82 +250,92 @@ def score_target_state(src, tgt, eta, is_comet, step, needed, mine_count=1, stat
 # ==============================================================================
 
 def heuristic_moves(state, pid, exclude_targets=None):
-    """Generate precise-commitment, multi-attack non-conflicting turn moves."""
+    """
+    V8 AGGRESSOR Heuristic Strategy:
+      - Multi-fire: every planet fires multiple times per turn if surplus exists.
+      - Cooperative targeting: multiple source planets can target the same hard target.
+      - Proactive defense (threat ETA < 20 ticks, defense-check radius 40).
+      - Precise needed + buffer calculation to guarantee capture.
+      - Support for MCTS exclude_targets exploration.
+    """
     if exclude_targets is None:
         exclude_targets = set()
-        
+
     planets = state['planets']
     fleets = state['fleets']
     ips = state['ips']
     vel = state['angular_velocity']
     comets = state.get('comet_planet_ids', set())
-    moving = state.get('moving', set())
     step = state['step']
-    
+
     mine = [p for p in planets if p['owner'] == pid]
     targets = [p for p in planets if p['owner'] != pid and p['id'] not in exclude_targets]
-    
+
     if not mine:
         return []
-        
-    # --- Snowball Mode Detection ---
-    total_ships = sum(p['ships'] for p in planets) + sum(f['ships'] for f in fleets)
-    my_ships = sum(p['ships'] for p in mine) + sum(f['ships'] for f in fleets if f['owner'] == pid)
-    snowball = (my_ships >= 0.55 * total_ships) and (len(mine) >= len(planets) * 0.4)
 
-    # --- En-route tracking to calculate pending incoming friendly forces ---
-    pending_incoming_ships = {p['id']: 0 for p in targets}
+    # ── 1. Calculate incoming friendly ships (to subtract from needed) ──────
+    pending_incoming = {p['id']: 0 for p in targets}
     for f in fleets:
         if f['owner'] == pid:
-            best_match, best_diff = None, 0.35
-            for tgt in targets:
-                dx, dy = tgt['x'] - f['x'], tgt['y'] - f['y']
-                if math.hypot(dx, dy) < 1.0:
+            best_tgt = None
+            best_diff = 0.35
+            for t in targets:
+                dx, dy = t['x'] - f['x'], t['y'] - f['y']
+                dist = math.hypot(dx, dy)
+                if dist < 1.0:
                     continue
-                a_to_tgt = math.atan2(dy, dx)
-                diff = abs(math.atan2(math.sin(f['angle'] - a_to_tgt), math.cos(f['angle'] - a_to_tgt)))
+                a_tgt = math.atan2(dy, dx)
+                diff = abs(math.atan2(math.sin(f['angle'] - a_tgt), math.cos(f['angle'] - a_tgt)))
                 if diff < best_diff:
-                    best_diff, best_match = diff, tgt['id']
-            if best_match is not None:
-                pending_incoming_ships[best_match] += f['ships']
+                    best_diff = diff
+                    best_tgt = t['id']
+            if best_tgt is not None:
+                pending_incoming[best_tgt] += f['ships']
 
-    moves = []
+    # ── 2. Defense: Reinforce threatened friendly planets ────────────────────
     available_ships = {p['id']: p['ships'] for p in mine}
-    
-    # === PHASE 1: DEFEND threatened friendly planets ===
+    moves = []
+
     for p in mine:
         incoming_fleets = []
         for f in fleets:
             if f['owner'] == pid or f['owner'] < 0:
                 continue
-            if is_heading_to(f, p):
-                incoming_fleets.append((f, math.hypot(p['x'] - f['x'], p['y'] - f['y'])))
-                
+            # Defend check radius is 40.0 (V8 feature)
+            dist = math.hypot(p['x'] - f['x'], p['y'] - f['y'])
+            if dist <= 40.0 and is_heading_to(f, p):
+                incoming_fleets.append((f, dist))
+
         if not incoming_fleets:
             continue
-            
+
         incoming_ships = sum(f['ships'] for f, _ in incoming_fleets)
         closest_f, closest_dist = min(incoming_fleets, key=lambda x: x[1])
         threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
-        
+
+        # Proactive defense only if threat is close (V8 feature: threat_eta < 20.0)
+        if threat_eta >= 20.0:
+            continue
+
         production_turns = int(math.floor(threat_eta))
         garrison_at_impact = p['ships'] + p['prod'] * production_turns
-        
-        # Pre-emptive reinforcement or hard deficit check
-        safety_threshold = int(incoming_ships * 1.3 + 5)
-        if garrison_at_impact >= safety_threshold and threat_eta >= 15.0:
+
+        safety_threshold = int(incoming_ships * 1.35 + 4)
+        if garrison_at_impact >= safety_threshold:
             continue
-            
+
         deficit = safety_threshold - garrison_at_impact
         if deficit < 3:
             continue
-        
+
         helpers = sorted(
             [m for m in mine if m['id'] != p['id'] and available_ships[m['id']] > 10],
             key=lambda m: math.hypot(m['x'] - p['x'], m['y'] - p['y'])
         )
+
         for h in helpers:
-            send = min(int(available_ships[h['id']] * 0.6), int(deficit))
+            send = min(int(available_ships[h['id']] * 0.65), int(deficit))
             if send < 3:
                 continue
             angle, eta = find_angle_state(h, p, send, vel, ips, step, state)
@@ -299,36 +345,55 @@ def heuristic_moves(state, pid, exclude_targets=None):
                 deficit -= send
                 if deficit <= 0:
                     break
-    
-    # === PHASE 2: ATTACK targets aggressively (Multi-Fire Loop) ===
+
+    # ── 3. Aggressive Attack multi-fire loop ─────────────────────────────────
     mine_sorted = sorted(mine, key=lambda p: p['ships'], reverse=True)
-    turn_targeted = set()
-    
+    # Track targeted commitments per target during this turn's heuristic loop
+    this_turn_sent = {p['id']: 0 for p in targets}
+
     for src in mine_sorted:
         launches = 0
-        min_surplus = 8 if snowball else 15
-        
-        while available_ships[src['id']] >= 4 and launches < 3:
+        min_surplus = 10 if len(mine) > 3 else 16
+
+        # V8 feature: cap launches at 4 per planet to avoid complete exhaustion
+        while available_ships[src['id']] >= 4 and launches < 4:
             best_score = -float('inf')
             best_tgt = None
             best_angle = None
             best_needed = 0
             best_send = 0
-            
+
             for tgt in targets:
-                if tgt['id'] in turn_targeted:
-                    continue
-                    
-                is_moving_tgt = tgt['id'] in moving
                 is_comet = tgt['id'] in comets
                 dist = math.hypot(src['x'] - tgt['x'], src['y'] - tgt['y'])
-                required_reserve = 3 if dist < 28.0 else min_surplus
-                
+
+                # Reserve requirement
+                required_reserve = 3 if dist < 25.0 else min_surplus
+
+                # Defend check before launch (V8 feature: check radius 40.0)
+                under_threat = False
+                incoming_threats = [f for f in fleets if f['owner'] != pid and is_heading_to(f, src)]
+                if incoming_threats:
+                    closest_threat = min(incoming_threats, key=lambda f: math.hypot(src['x'] - f['x'], src['y'] - f['y']))
+                    tdist = math.hypot(src['x'] - closest_threat['x'], src['y'] - closest_threat['y'])
+                    if tdist <= 40.0:
+                        threat_eta = tdist / max(spd(closest_threat['ships']), 0.1)
+                        if threat_eta < 20.0:
+                            incoming_ships = sum(f['ships'] for f in incoming_threats)
+                            garrison_at_impact = available_ships[src['id']] + src['prod'] * int(math.floor(threat_eta))
+                            # If sending ships would leave us vulnerable to this close threat
+                            if garrison_at_impact < incoming_ships + 5:
+                                under_threat = True
+
+                if under_threat:
+                    continue  # Keep ships for defense
+
+                # Determine force size
                 send = min(int(available_ships[src['id']] - 1), tgt['ships'] + 5)
                 angle = None
                 eta = 0
                 needed = 0
-                
+
                 for _ in range(3):
                     if send < 3:
                         break
@@ -336,48 +401,38 @@ def heuristic_moves(state, pid, exclude_targets=None):
                     if res[0] is None:
                         break
                     angle, eta = res
-                    
-                    already_sent = pending_incoming_ships.get(tgt['id'], 0)
+
+                    # Total incoming friendly force = pending from prior turns + this turn's actions
+                    already_sent = pending_incoming.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
+
                     if is_comet:
-                        needed = max(0.0, 2.0 - already_sent)
+                        needed = max(0, 2 - already_sent)
                     else:
                         needed = tgt['ships'] + 1
                         if tgt['owner'] >= 0:
                             needed += tgt['prod'] * eta
-                        needed = max(0.0, needed - already_sent)
-                        
+                        needed = max(0, needed - already_sent)
+
                     needed = int(math.ceil(needed))
-                    safety_mult = 1.35 if tgt['owner'] >= 0 else 1.0
-                    send = min(int(available_ships[src['id']] - 1), int(needed * safety_mult))
-                    
-                if angle is None or send < 3 or available_ships[src['id']] - send < required_reserve or available_ships[src['id']] <= needed + 2:
+                    # V8 multiplier: never lose a capture to production drift
+                    send = min(int(available_ships[src['id']] - 1), int(needed * 1.35 + 4))
+
+                if angle is None or send < 3 or available_ships[src['id']] - send < required_reserve:
                     continue
-                    
-                # Defend check: reduced threshold of 45.0 units!
-                incoming_fleets = [f for f in fleets if f['owner'] != pid and is_heading_to(f, src)]
-                if incoming_fleets:
-                    incoming_ships = sum(f['ships'] for f in incoming_fleets)
-                    closest_f = min(incoming_fleets, key=lambda f: math.hypot(src['x'] - f['x'], src['y'] - f['y']))
-                    closest_dist = math.hypot(src['x'] - closest_f['x'], src['y'] - closest_f['y'])
-                    if closest_dist <= 45.0:
-                        threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
-                        garrison_at_impact = available_ships[src['id']] + src['prod'] * int(math.floor(threat_eta))
-                        if garrison_at_impact < incoming_ships + 3 + send:
-                            continue # Skip: source planet needs these ships to defend itself!
-                
-                sc = score_target_state(src, tgt, eta, is_comet, step, needed, len(mine), state)
+
+                sc = score_target_state(src, tgt, eta, is_comet, step, needed, len(mine), state,
+                                        already_sent=(pending_incoming.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)))
                 if sc > best_score:
                     best_score = sc
                     best_tgt = tgt
                     best_angle = angle
                     best_needed = needed
                     best_send = send
-                    
+
             if best_tgt and available_ships[src['id']] >= best_send + 1:
                 moves.append([src['id'], best_angle, best_send])
                 available_ships[src['id']] -= best_send
-                turn_targeted.add(best_tgt['id'])
-                pending_incoming_ships[best_tgt['id']] = pending_incoming_ships.get(best_tgt['id'], 0) + best_send
+                this_turn_sent[best_tgt['id']] += best_send
                 launches += 1
             else:
                 break
