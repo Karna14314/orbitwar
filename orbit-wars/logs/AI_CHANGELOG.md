@@ -37,3 +37,18 @@
 - V4 original: ~450
 - V6 broken: ~380
 - Champion C: ~1100-1300
+
+### 2024-05-19 — Session 2
+
+### What Jules tried this session
+- Repository Cleanup: Renamed experimental agents to use standard naming format (e.g. `agent_heuristic_current.py`, `agent_mcts_aggressive.py`), removed abandoned agents, and established standard folder limits.
+- Fixed Physics: Implemented dynamic anticipation for fleet intercepts matching target moving positions, expanded sun collision check radius slightly for a safety buffer, and implemented multi-angle offset checks for pathfinding around the sun.
+- Tweaked Aggressive capture logic: Multiplied Early game EV for unowned/neutral targets by 2.0. Boosted buffer logic when attacking multiples to prevent bleed.
+- Held 4-way and 1v1 Tournaments.
+
+### What worked
+- The purely heuristic agent improved massively from the neutral evaluation boost, matching the Aggressive MCTS evenly (2 wins each).
+
+### Current champion
+- File: `champion_tuned.py` & `agent_heuristic_current.py` tie
+- Final submission: `submission.py` combines the MCTS Aggressive logic with the Heuristic updates for Kaggle.

@@ -4,9 +4,9 @@ import sys
 import os
 import random
 
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from _sim import spd, find_angle, obs_to_state, copy_state, is_heading_to, simulate_tick
-from agent_B import heuristic_moves
+from experimental.agent_heuristic_current import heuristic_moves
 
 def fast_policy(state, pid):
     mine = [p for p in state['planets'] if p['owner'] == pid]

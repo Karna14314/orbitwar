@@ -3,7 +3,7 @@ import sys
 import os
 
 # Add the parent directory to the path so we can import _sim
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from _sim import spd, find_angle, obs_to_state, copy_state, is_heading_to
 
 def heuristic_moves(state, pid, exclude_targets=None):
@@ -55,6 +55,11 @@ def heuristic_moves(state, pid, exclude_targets=None):
             # Bug 2 fix: EV score ignores travel time
             ticks_remaining = max(1, 1000 - state['step'] - eta)
             ev = tgt['prod'] * ticks_remaining / (1.0 + 0.05 * eta)  # discount by travel time
+
+            # Massive priority to early game neutral targets
+            if tgt['owner'] == -1 and state['step'] < 200:
+                ev *= 2.0
+
             score = ev - needed * 0.8
 
             if score > best_score:
