@@ -10,29 +10,52 @@ SUN_X, SUN_Y, SUN_R = 50.0, 50.0, 10.0
 
 # Sun collision check (add 0.5 safety margin)
 def hits_sun(x1, y1, x2, y2):
-    vx, vy = x2-x1, y2-y1
-    len2 = vx*vx + vy*vy
-    if len2 == 0: return (x1-50)**2+(y1-50)**2 <= SUN_R**2
-    t = max(0.0, min(1.0, ((50-x1)*vx+(50-y1)*vy)/len2))
-    cx, cy = x1+t*vx, y1+t*vy
-    return (cx-50)**2+(cy-50)**2 <= (SUN_R+0.5)**2
+    vx, vy = x2 - x1, y2 - y1
+    len2 = vx * vx + vy * vy
+    if len2 == 0:
+        return (x1 - 50) ** 2 + (y1 - 50) ** 2 <= (SUN_R + 0.5) ** 2
+
+    t = max(0.0, min(1.0, ((50 - x1) * vx + (50 - y1) * vy) / len2))
+    cx, cy = x1 + t * vx, y1 + t * vy
+    return (cx - 50) ** 2 + (cy - 50) ** 2 <= (SUN_R + 0.5) ** 2
 
 # Planet orbit (initial_planets gives t=0 positions)
 def planet_pos_at_step(ip, vel, step):
-    r = math.hypot(ip['x']-50, ip['y']-50)
+    r = math.hypot(ip['x'] - 50, ip['y'] - 50)
     if r < 1.0: return ip['x'], ip['y']
-    a = math.atan2(ip['y']-50, ip['x']-50) + vel*step
-    return 50+r*math.cos(a), 50+r*math.sin(a)
+    a = math.atan2(ip['y'] - 50, ip['x'] - 50) + vel * step
+    return 50 + r * math.cos(a), 50 + r * math.sin(a)
 
 # Intercept angle search
 def find_angle(src, tgt, ships, vel, ips, step, is_moving):
     speed = spd(ships)
     for tick in range(1, 80):
-        tx, ty = planet_pos_at_step(ips[tgt['id']], vel, step+tick) \
-                 if is_moving else (tgt['x'], tgt['y'])
-        if speed*tick >= math.hypot(src['x']-tx, src['y']-ty) - tgt['r']:
-            if not hits_sun(src['x'], src['y'], tx, ty):
-                return math.atan2(ty-src['y'], tx-src['x']), tick
+        if is_moving:
+            tx, ty = planet_pos_at_step(ips[tgt['id']], vel, step + tick)
+        else:
+            tx, ty = tgt['x'], tgt['y']
+
+        dist = math.hypot(src['x'] - tx, src['y'] - ty)
+
+        if speed * tick >= dist - tgt['r']:
+            base_angle = math.atan2(ty - src['y'], tx - src['x'])
+
+            # Check direct line
+            tx_test = src['x'] + math.cos(base_angle) * dist
+            ty_test = src['y'] + math.sin(base_angle) * dist
+
+            if not hits_sun(src['x'], src['y'], tx_test, ty_test):
+                return base_angle, tick
+
+            # Offset search
+            for off in [0.08, -0.08, 0.15, -0.15, 0.3, -0.3, 0.45, -0.45, 0.5, -0.5]:
+                a = base_angle + off
+                tx_test = src['x'] + math.cos(a) * dist
+                ty_test = src['y'] + math.sin(a) * dist
+                if not hits_sun(src['x'], src['y'], tx_test, ty_test):
+                    return a, tick
+            return None, None
+
     return None, None
 
 def segment_intersects_circle(x1, y1, x2, y2, cx, cy, r):

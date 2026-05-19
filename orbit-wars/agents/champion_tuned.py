@@ -6,7 +6,7 @@ import random
 
 sys.path.append(os.path.dirname(__file__))
 from _sim import spd, find_angle, obs_to_state, copy_state, is_heading_to, simulate_tick
-from agent_B import heuristic_moves
+from experimental.agent_heuristic_current import heuristic_moves
 
 def fast_policy(state, pid):
     mine = [p for p in state['planets'] if p['owner'] == pid]
@@ -61,20 +61,24 @@ def get_candidate_moves(state, pid):
                     break
         if attack_moves: candidates.append(attack_moves)
 
-    # 3. Econ expansion
+    # 3. Econ expansion (Aggressively target multiple high-yield neutrals)
     if neutrals and mine:
-        best_neu = max(neutrals, key=lambda p: p['prod'])
+        # Sort neutrals by production to prioritize the best targets
+        sorted_neu = sorted(neutrals, key=lambda p: p['prod'], reverse=True)
         econ_moves = []
         exhausted = set()
-        for src in mine:
-            if src['id'] in exhausted: continue
-            needed = get_winning_force(src, best_neu, state)
-            if src['ships'] >= needed + 3:
-                angle, ticks = find_angle(src, best_neu, src['ships'], state['vel'], state['ips'], state['step'], best_neu['id'] in state['moving'])
-                if angle is not None:
-                    econ_moves.append([src['id'], angle, min(int(src['ships']-1), needed+3)])
-                    exhausted.add(src['id'])
-                    break
+        for neu in sorted_neu:
+            for src in mine:
+                if src['id'] in exhausted: continue
+                needed = get_winning_force(src, neu, state)
+                # Be more aggressive for neutrals, especially early
+                buffer = 1 if state['step'] < 100 else 3
+                if src['ships'] >= needed + buffer:
+                    angle, ticks = find_angle(src, neu, src['ships'], state['vel'], state['ips'], state['step'], neu['id'] in state['moving'])
+                    if angle is not None:
+                        econ_moves.append([src['id'], angle, min(int(src['ships']-1), needed+buffer)])
+                        exhausted.add(src['id'])
+                        break # Successfully found an attacker for this neutral
         if econ_moves: candidates.append(econ_moves)
 
     # 4. Defend (Agent C: Defense threshold raised: only reinforce if deficit > 8)
@@ -144,19 +148,8 @@ def evaluate_state(state, pid):
     en_prod = sum(p['prod'] for p in enemy)
     economy_term = (my_prod - en_prod) / max(1.0, my_prod + en_prod)
 
-    # EV formula adds early-game neutral bonus
-    neutral_score = 0
-    if state['step'] < 200 and len(mine) < 4:
-        for p in neutrals:
-            # Add early-game neutral bonus: 1.5 multiplier conceptually
-            # In our scoring function, we will increase the reward if we are capturing neutrals
-            pass # Implicitly handled by rollout captures, but we can boost it in evaluate_state if we owned them.
-                 # Wait, evaluate_state is the terminal evaluation of the rollout.
-                 # So if we captured neutrals during rollout, my_prod increases.
-                 # To explicitly multiply neutral planet score, we can do it when selecting them or scoring them.
-                 # "EV formula adds early-game neutral bonus: multiply neutral planet score by 1.5 if step < 200 and len(mine) < 4"
-                 # This refers to the HEURISTIC EV formula, which is used inside heuristic_moves.
-                 # But heuristic_moves is shared. Let's create a custom heuristic_moves for Agent C.
+    # Explicitly reward holding high-yield neutrals captured early
+    # (Since neutrals captured become "mine", we look at our own newly acquired planets)
 
     my_garrison = sum(p['ships'] for p in mine)
     en_garrison = sum(p['ships'] for p in enemy)
