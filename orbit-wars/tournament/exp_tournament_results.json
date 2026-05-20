@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-05-20 06:50",
+  "n_games_per_pair": 10,
+  "elo": {
+    "Wave": 1141.129937908712,
+    "Triage": 902.5900909847021,
+    "Speed": 1127.9315023746724,
+    "Hybrid": 828.348468731913
+  },
+  "record": {
+    "Wave": {
+      "wins": 22,
+      "losses": 8,
+      "draws": 0,
+      "reward": 14.0,
+      "avg_reward": 0.4666666666666667
+    },
+    "Triage": {
+      "wins": 10,
+      "losses": 20,
+      "draws": 0,
+      "reward": -10.0,
+      "avg_reward": -0.3333333333333333
+    },
+    "Speed": {
+      "wins": 24,
+      "losses": 6,
+      "draws": 0,
+      "reward": 18.0,
+      "avg_reward": 0.6
+    },
+    "Hybrid": {
+      "wins": 4,
+      "losses": 26,
+      "draws": 0,
+      "reward": -22.0,
+      "avg_reward": -0.7333333333333333
+    }
+  },
+  "champion": "Wave"
+}

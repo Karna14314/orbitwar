@@ -53,5 +53,11 @@
       "avg_reward": 0.1
     }
   },
-  "champion": "Intercept"
+  "champion": "Intercept",
+  "latest_challenge": {
+    "challenger": "Wave",
+    "champion_wins": 7,
+    "challenger_wins": 2,
+    "winner": "Champion"
+  }
 }

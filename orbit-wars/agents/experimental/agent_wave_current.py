@@ -1,7 +1,7 @@
-# HYPOTHESIS: Tests a hybrid strategy combining Concentric Wave Expansion, Defensive Triage, and Speed-Scaling Interceptions.
+# HYPOTHESIS: Tests concentric wave expansion. Grabs adjacent neutrals early, prioritizing co-orbiting neighbors.
 # DATE: 2024-05-20
 # BASED ON: champion.py (Intercept)
-# CHANGELOG: Synthesizes the wave expansion logic for co-orbiting neighbors, the defensive triage rule for doomed planets, and the speed-scaling logic for attack sizes. Checked registry - no duplicate strategy.
+# CHANGELOG: Modifies scoring to reward attacks on early game adjacent neutrals and co-orbiting neighbors. Reduces base EV and boosts early neutral / co-orbit value. Checked registry - no duplicate strategy.
 
 import math
 
@@ -100,7 +100,6 @@ def heuristic_moves(state, pid, exclude_targets=None):
         exclude_targets = set()
 
     mine = [p for p in state['planets'] if p['owner'] == pid]
-    enemy_planets = [p for p in state['planets'] if p['owner'] not in (pid, -1)]
     targets = [p for p in state['planets'] if p['owner'] != pid and p['id'] not in exclude_targets]
 
     if not mine or not targets:
@@ -116,64 +115,33 @@ def heuristic_moves(state, pid, exclude_targets=None):
         if src['id'] in used_src: continue
         if src['ships'] < 5: continue
 
-        # Defensive Triage: The Doomed Planet Rule
-        enemy_bases_nearby = sum(1 for ep in enemy_planets if math.hypot(src['x']-ep['x'], src['y']-ep['y']) < 30.0)
-        incoming_threats = [f for f in state['fleets'] if f['owner'] != pid and is_heading_to(f, src)]
-
-        doomed = False
-        if enemy_bases_nearby >= 3 and incoming_threats:
-            closest_threat_eta = min([math.hypot(src['x']-f['x'], src['y']-f['y'])/spd(f['ships']) for f in incoming_threats])
-            if closest_threat_eta < 10:
-                doomed = True
-
         best_score = -float('inf')
         best_tgt = None
         best_angle = None
         best_needed = 0
-        best_send_size = 0
 
         for tgt in targets:
             if tgt['id'] in pending_targets: continue
-
+            dist = math.hypot(src['x']-tgt['x'], src['y']-tgt['y'])
             is_moving = tgt['id'] in state.get('moving', [])
-            rough_dist = math.hypot(src['x']-tgt['x'], src['y']-tgt['y'])
-            rough_eta = rough_dist / 1.0
-            needed_initial = tgt['ships'] + 1 + (tgt['prod'] * rough_eta if tgt['owner'] >= 0 else 0)
-
-            # Speed-Scaling Interceptions dynamic safety buffer
-            proposed_send = max(needed_initial * 1.35, needed_initial + 4)
-            if src['ships'] - 1 < proposed_send:
-                proposed_send = src['ships'] - 1
-            if proposed_send < 1: continue
-
-            angle, ticks = find_angle(src, tgt, proposed_send, state['vel'], state['ips'], state['step'], is_moving)
+            angle, ticks = find_angle(src, tgt, src['ships'], state['vel'], state['ips'], state['step'], is_moving)
             if angle is None: continue
-
             eta = ticks
             needed = int(tgt['ships'] + 1 + (tgt['prod'] * eta if tgt['owner'] >= 0 else 0))
-            proposed_send = max(needed * 1.35, needed + 4)
-            if src['ships'] - 1 < proposed_send:
-                proposed_send = src['ships'] - 1
 
             ticks_remaining = max(1, 1000 - state['step'] - eta)
             ev = tgt['prod'] * ticks_remaining / (1.0 + 0.05 * eta)
 
             # Wave Expansion Logic: Co-orbiting and early game neutral focus
+            # Co-orbiting check: similar distance from sun
             src_r = math.hypot(src['x']-50, src['y']-50)
             tgt_r = math.hypot(tgt['x']-50, tgt['y']-50)
-            if abs(src_r - tgt_r) < 10.0:
-                ev *= 2.5
+            if abs(src_r - tgt_r) < 10.0:  # Roughly same ring
+                ev *= 2.5 # Huge boost to co-orbiting neighbors
 
             if tgt['owner'] == -1 and state['step'] < 60:
-                if rough_dist < 25.0:
+                if dist < 25.0: # immediate adjacent static neutrals
                     ev *= 3.0
-
-            # Contested Zone Guard
-            if mine and enemy_planets:
-                dist_to_us = min(math.hypot(tgt['x']-mp['x'], tgt['y']-mp['y']) for mp in mine)
-                dist_to_enemy = min(math.hypot(tgt['x']-ep['x'], tgt['y']-ep['y']) for ep in enemy_planets)
-                if dist_to_enemy < dist_to_us and src['ships'] < needed * 2:
-                    ev *= 0.1
 
             score = ev - needed * 0.8
 
@@ -182,30 +150,24 @@ def heuristic_moves(state, pid, exclude_targets=None):
                 best_tgt = tgt
                 best_angle = angle
                 best_needed = needed
-                best_send_size = proposed_send
 
-        if best_tgt and best_send_size >= best_needed + 1:
-            if not doomed:
-                incoming_ships = sum(f['ships'] for f in state['fleets'] if f['owner'] != pid and is_heading_to(f, src))
-                if incoming_ships > 0:
-                    closest_dist = float('inf')
-                    closest_f = None
-                    for f in state['fleets']:
-                        if f['owner'] != pid and is_heading_to(f, src):
-                            d = math.hypot(src['x']-f['x'], src['y']-f['y'])
-                            if d < closest_dist:
-                                closest_dist = d
-                                closest_f = f
-                    if closest_dist <= 85.0:
-                        threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
-                        garrison_at_impact = src['ships'] + src['prod'] * threat_eta
-                        if garrison_at_impact < incoming_ships + best_send_size:
-                             continue
-
-            send = int(best_send_size)
-            if doomed:
-                send = int(src['ships'] - 1)
-
+        if best_tgt and src['ships'] >= best_needed + 3:
+            incoming_ships = sum(f['ships'] for f in state['fleets'] if f['owner'] != pid and is_heading_to(f, src))
+            if incoming_ships > 0:
+                closest_dist = float('inf')
+                closest_f = None
+                for f in state['fleets']:
+                    if f['owner'] != pid and is_heading_to(f, src):
+                        d = math.hypot(src['x']-f['x'], src['y']-f['y'])
+                        if d < closest_dist:
+                            closest_dist = d
+                            closest_f = f
+                if closest_dist <= 85.0:
+                    threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
+                    garrison_at_impact = src['ships'] + src['prod'] * threat_eta
+                    if garrison_at_impact < incoming_ships + 3 + best_needed:
+                         continue
+            send = min(int(src['ships'] - 1), best_needed + 3)
             moves.append([src['id'], best_angle, send])
             used_src.add(src['id'])
             pending_targets.add(best_tgt['id'])
@@ -218,5 +180,5 @@ def agent(obs):
         pid = obs.get("player", 0)
         return heuristic_moves(state, pid)
     except Exception as e:
-        print(f"Agent Hybrid Error: {e}")
+        print(f"Agent Wave Error: {e}")
         return []

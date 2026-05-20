@@ -1,0 +1,33 @@
+[
+  {
+    "date": "2024-05-20",
+    "experimental_agents": {
+      "Wave": {
+        "strategy": "Concentric Wave Expansion",
+        "configs": "Boosts early adjacent neutrals, prioritizes co-orbiting neighbors",
+        "outcome_vs_champion": "Challenged Champion, lost 2-7",
+        "failure_reason": "Lost to champion in challenge match"
+      },
+      "Triage": {
+        "strategy": "Defensive Triage",
+        "configs": "Abandons planets with 3+ enemy bases nearby and threat ETA < 10, prevents early expansion into contested zones without massive fleet",
+        "outcome_vs_champion": "Did not reach challenge",
+        "failure_reason": "Failed to win experimental round robin"
+      },
+      "Speed": {
+        "strategy": "Speed-Scaling Interceptions",
+        "configs": "Dynamic safety buffer: max(needed * 1.35, needed + 4)",
+        "outcome_vs_champion": "Did not reach challenge",
+        "failure_reason": "Failed to win experimental round robin"
+      },
+      "Hybrid": {
+        "strategy": "Hybrid",
+        "configs": "Combined Wave, Triage, and Speed scaling features",
+        "outcome_vs_champion": "Did not reach challenge",
+        "failure_reason": "Failed to win experimental round robin"
+      }
+    },
+    "tournament_winner": "Wave",
+    "challenge_winner": "Champion"
+  }
+]
