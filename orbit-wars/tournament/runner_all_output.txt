@@ -1,0 +1,159 @@
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO: Successfully loaded OpenSpiel environments: 24.
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_amazons
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_backgammon
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_checkers
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_chess
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_clobber
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_coin_game
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_coin_game_arena
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_connect_four
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_dark_hex
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_gin_rummy
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_go
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_goofspiel
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_hearts
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_hex
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_lines_of_action
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_matching_pennies_3p
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_oshi_zumo
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_othello
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_repeated_game
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_tic_tac_toe
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_y
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_universal_poker
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_repeated_poker
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_python_repeated_pokerkit
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO: OpenSpiel games skipped: 1.
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    snake
+
+==================================================
+  Champion vs V8  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Champion=1016 V8=984
+  Game 02: A_reward=-1 B_reward=1 ELO: Champion=1031 V8=969
+  Game 03: A_reward=1 B_reward=-1 ELO: Champion=1044 V8=956
+  Game 04: A_reward=-1 B_reward=1 ELO: Champion=1056 V8=944
+
+==================================================
+  Champion vs V9  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Champion=1069 V9=987
+  Game 02: A_reward=-1 B_reward=1 ELO: Champion=1082 V9=974
+  Game 03: A_reward=1 B_reward=-1 ELO: Champion=1093 V9=963
+  Game 04: A_reward=-1 B_reward=1 ELO: Champion=1103 V9=953
+
+==================================================
+  Champion vs Rush  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Champion=1114 Rush=989
+  Game 02: A_reward=-1 B_reward=1 ELO: Champion=1125 Rush=978
+  Game 03: A_reward=1 B_reward=-1 ELO: Champion=1134 Rush=969
+  Game 04: A_reward=1 B_reward=-1 ELO: Champion=1111 Rush=992
+
+==================================================
+  Champion vs Intercept  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: Champion=1090 Intercept=1021
+  Game 02: A_reward=-1 B_reward=1 ELO: Champion=1103 Intercept=1008
+  Game 03: A_reward=-1 B_reward=1 ELO: Champion=1083 Intercept=1028
+  Game 04: A_reward=1 B_reward=1 ELO: Champion=1080 Intercept=1031
+
+==================================================
+  Champion vs Defense  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Champion=1093 Defense=988
+  Game 02: A_reward=1 B_reward=-1 ELO: Champion=1072 Defense=1008
+  Game 03: A_reward=1 B_reward=-1 ELO: Champion=1085 Defense=995
+  Game 04: A_reward=-1 B_reward=1 ELO: Champion=1097 Defense=983
+
+==================================================
+  V8 vs V9  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: V8=961 V9=936
+  Game 02: A_reward=1 B_reward=-1 ELO: V8=943 V9=953
+  Game 03: A_reward=1 B_reward=-1 ELO: V8=960 V9=937
+  Game 04: A_reward=-1 B_reward=1 ELO: V8=975 V9=922
+
+==================================================
+  V8 vs Rush  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: V8=960 Rush=1007
+  Game 02: A_reward=1 B_reward=-1 ELO: V8=946 Rush=1021
+  Game 03: A_reward=-1 B_reward=1 ELO: V8=933 Rush=1033
+  Game 04: A_reward=1 B_reward=-1 ELO: V8=922 Rush=1045
+
+==================================================
+  V8 vs Intercept  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: V8=911 Intercept=1042
+  Game 02: A_reward=1 B_reward=-1 ELO: V8=900 Intercept=1052
+  Game 03: A_reward=-1 B_reward=1 ELO: V8=891 Intercept=1062
+  Game 04: A_reward=1 B_reward=-1 ELO: V8=882 Intercept=1070
+
+==================================================
+  V8 vs Defense  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: V8=871 Defense=995
+  Game 02: A_reward=-1 B_reward=1 ELO: V8=892 Defense=973
+  Game 03: A_reward=-1 B_reward=1 ELO: V8=880 Defense=986
+  Game 04: A_reward=1 B_reward=-1 ELO: V8=869 Defense=997
+
+==================================================
+  V9 vs Rush  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: V9=912 Rush=1055
+  Game 02: A_reward=1 B_reward=-1 ELO: V9=902 Rush=1065
+  Game 03: A_reward=-1 B_reward=1 ELO: V9=893 Rush=1074
+  Game 04: A_reward=1 B_reward=-1 ELO: V9=884 Rush=1082
+
+==================================================
+  V9 vs Intercept  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: V9=876 Intercept=1079
+  Game 02: A_reward=1 B_reward=-1 ELO: V9=869 Intercept=1086
+  Game 03: A_reward=-1 B_reward=1 ELO: V9=862 Intercept=1093
+  Game 04: A_reward=1 B_reward=-1 ELO: V9=855 Intercept=1100
+
+==================================================
+  V9 vs Defense  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: V9=845 Defense=1007
+  Game 02: A_reward=1 B_reward=-1 ELO: V9=836 Defense=1016
+  Game 03: A_reward=-1 B_reward=1 ELO: V9=828 Defense=1024
+  Game 04: A_reward=1 B_reward=-1 ELO: V9=820 Defense=1032
+
+==================================================
+  Rush vs Intercept  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: Rush=1067 Intercept=1115
+  Game 02: A_reward=-1 B_reward=1 ELO: Rush=1085 Intercept=1097
+  Game 03: A_reward=-1 B_reward=1 ELO: Rush=1070 Intercept=1112
+  Game 04: A_reward=1 B_reward=-1 ELO: Rush=1056 Intercept=1126
+
+==================================================
+  Rush vs Defense  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Rush=1071 Defense=1017
+  Game 02: A_reward=1 B_reward=-1 ELO: Rush=1052 Defense=1036
+  Game 03: A_reward=1 B_reward=-1 ELO: Rush=1068 Defense=1020
+  Game 04: A_reward=1 B_reward=-1 ELO: Rush=1049 Defense=1038
+
+==================================================
+  Intercept vs Defense  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Intercept=1139 Defense=1026
+  Game 02: A_reward=-1 B_reward=1 ELO: Intercept=1150 Defense=1015
+  Game 03: A_reward=-1 B_reward=1 ELO: Intercept=1128 Defense=1037
+  Game 04: A_reward=-1 B_reward=1 ELO: Intercept=1140 Defense=1025
+
+==================================================
+FINAL ELO STANDINGS
+  Intercept: ELO=1140  W=16 L=3 D=1  AvgReward=1
+  Champion: ELO=1097  W=15 L=4 D=1  AvgReward=1
+  Rush: ELO=1049  W=12 L=8 D=0  AvgReward=0
+  Defense: ELO=1025  W=11 L=9 D=0  AvgReward=0
+  V8: ELO=869  W=4 L=16 D=0  AvgReward=-1
+  V9: ELO=820  W=1 L=19 D=0  AvgReward=-1
+
+  CHAMPION: Intercept
+==================================================

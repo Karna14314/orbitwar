@@ -52,3 +52,28 @@
 ### Current champion
 - File: `champion_tuned.py` & `agent_heuristic_current.py` tie
 - Final submission: `submission.py` combines the MCTS Aggressive logic with the Heuristic updates for Kaggle.
+
+### 2024-05-20 — Session 3
+
+#### Experiments Run
+- **agent_rush_current**: Early rush on the nearest neutral/lowest-health post. Result: 2nd place in tournament. Good early momentum but fell short against intercept.
+- **agent_intercept_current**: Target coincidentally moving posts (comets) near current trajectory. Result: Won tournament (11W 1L) and won best-of-5 vs Champion (5W 0L). Key observation: Controlling moving planets gives a decisive map control and production advantage.
+- **agent_hybrid_current**: 8-Phase Decision Pipeline prioritizing pure heuristic logic. Result: 4th place. Overly complex and performed poorly without specific target prioritization.
+- **agent_defense_current**: Reactive retreat/evacuation when outnumbered. Result: 3rd place. Retreating logic saved ships but sacrificed too much ground/production.
+
+#### Failed Combinations (do not retry)
+- Strict 8-Phase Decision Pipeline (`agent_hybrid_current`) without explicit comet/rush prioritization fails to gain map control fast enough.
+- Evacuation-heavy defense (`agent_defense_current`) cedes too much production to the opponent.
+
+#### Partial Successes (worth hybridizing)
+- `agent_rush_current` showed promise for rapid early expansion.
+- `agent_intercept_current` maps brilliantly to dynamic comets.
+
+#### Tomorrow's Suggested Direction
+Based on today's results, the most promising untried hypothesis is: A hybrid heuristic that combines the early low-health rush of `agent_rush_current` with the mid-game comet-targeting logic of `agent_intercept_current`.
+
+#### Updated Evaluation vs Submissions (V8 / V9)
+- Included V8 and V9 submissions in the final mega-tournament to truly establish the hierarchy.
+- **Intercept** won the entire tournament with 1140 ELO and 16 Wins.
+- The previous champion held its ground fairly well against older variants (1097 ELO) but was consistently outmaneuvered by Intercept's dynamic map control.
+- V8 and V9 showed significant degradation in relative performance compared to the current standalone heuristic/MCTS models.
