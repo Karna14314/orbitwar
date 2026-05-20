@@ -1,41 +1,57 @@
 {
-  "timestamp": "2024-05-18 12:00",
+  "timestamp": "2026-05-20 01:17",
   "n_games_per_pair": 4,
   "elo": {
-    "A": 1050,
-    "B": 950,
-    "C": 1100,
-    "D": 1000
+    "Champion": 1097,
+    "V8": 869,
+    "V9": 820,
+    "Rush": 1049,
+    "Intercept": 1140,
+    "Defense": 1025
   },
   "record": {
-    "A": {
-      "wins": 8,
+    "Champion": {
+      "wins": 15,
       "losses": 4,
-      "draws": 0,
-      "reward": 8.0,
-      "avg_reward": 0.66
+      "draws": 1,
+      "reward": 12.0,
+      "avg_reward": 0.6
     },
-    "B": {
+    "V8": {
       "wins": 4,
+      "losses": 16,
+      "draws": 0,
+      "reward": -12.0,
+      "avg_reward": -0.6
+    },
+    "V9": {
+      "wins": 1,
+      "losses": 19,
+      "draws": 0,
+      "reward": -18.0,
+      "avg_reward": -0.9
+    },
+    "Rush": {
+      "wins": 12,
       "losses": 8,
       "draws": 0,
       "reward": 4.0,
-      "avg_reward": 0.33
+      "avg_reward": 0.2
     },
-    "C": {
-      "wins": 10,
-      "losses": 2,
-      "draws": 0,
-      "reward": 10.0,
-      "avg_reward": 0.83
+    "Intercept": {
+      "wins": 16,
+      "losses": 3,
+      "draws": 1,
+      "reward": 14.0,
+      "avg_reward": 0.7
     },
-    "D": {
-      "wins": 6,
-      "losses": 6,
+    "Defense": {
+      "wins": 11,
+      "losses": 9,
       "draws": 0,
-      "reward": 6.0,
-      "avg_reward": 0.50
+      "reward": 2.0,
+      "avg_reward": 0.1
     }
   },
-  "champion": "C"
+  "champion": "Intercept"
 }

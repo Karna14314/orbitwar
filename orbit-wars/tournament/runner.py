@@ -10,12 +10,14 @@ import json, time, importlib.util, os
 os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 
 AGENTS = {
-    'A': 'agents/agent_A.py',
-    'B': 'agents/agent_B.py',
-    'C': 'agents/agent_C.py',
-    'D': 'agents/agent_D.py',
+    'Champion': 'agents/champion.py',
+    'V8': '../submission_v8.py',
+    'V9': '../submission_v9.py',
+    'Rush': 'agents/experimental/agent_rush_current.py',
+    'Intercept': 'agents/experimental/agent_intercept_current.py',
+    'Defense': 'agents/experimental/agent_defense_current.py',
 }
-N_GAMES = 20          # games per matchup pair
+N_GAMES = 4          # games per matchup pair
 ELO_K   = 32          # ELO K-factor
 
 def load_agent(path):

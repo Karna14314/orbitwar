@@ -1,0 +1,85 @@
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO: Successfully loaded OpenSpiel environments: 24.
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_amazons
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_backgammon
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_checkers
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_chess
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_clobber
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_coin_game
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_coin_game_arena
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_connect_four
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_dark_hex
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_gin_rummy
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_go
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_goofspiel
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_hearts
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_hex
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_lines_of_action
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_matching_pennies_3p
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_oshi_zumo
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_othello
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_repeated_game
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_tic_tac_toe
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_y
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_universal_poker
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_repeated_poker
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    open_spiel_python_repeated_pokerkit
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO: OpenSpiel games skipped: 1.
+[kaggle_environments.envs.open_spiel_env.open_spiel_env] INFO:    snake
+
+==================================================
+  Rush vs Intercept  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Rush=1016 Intercept=984
+  Game 02: A_reward=1 B_reward=-1 ELO: Rush=999 Intercept=1001
+  Game 03: A_reward=-1 B_reward=1 ELO: Rush=983 Intercept=1017
+  Game 04: A_reward=1 B_reward=-1 ELO: Rush=968 Intercept=1032
+
+==================================================
+  Rush vs Hybrid  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Rush=986 Hybrid=983
+  Game 02: A_reward=-1 B_reward=1 ELO: Rush=1002 Hybrid=967
+  Game 03: A_reward=1 B_reward=-1 ELO: Rush=1016 Hybrid=952
+  Game 04: A_reward=-1 B_reward=1 ELO: Rush=1029 Hybrid=939
+
+==================================================
+  Rush vs Defense  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: Rush=1012 Defense=1017
+  Game 02: A_reward=1 B_reward=-1 ELO: Rush=996 Defense=1033
+  Game 03: A_reward=1 B_reward=-1 ELO: Rush=1014 Defense=1015
+  Game 04: A_reward=-1 B_reward=1 ELO: Rush=1030 Defense=999
+
+==================================================
+  Intercept vs Hybrid  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Intercept=1044 Hybrid=927
+  Game 02: A_reward=-1 B_reward=1 ELO: Intercept=1054 Hybrid=917
+  Game 03: A_reward=1 B_reward=-1 ELO: Intercept=1064 Hybrid=907
+  Game 04: A_reward=-1 B_reward=1 ELO: Intercept=1074 Hybrid=897
+
+==================================================
+  Intercept vs Defense  (4 games)
+==================================================
+  Game 01: A_reward=1 B_reward=-1 ELO: Intercept=1086 Defense=987
+  Game 02: A_reward=-1 B_reward=1 ELO: Intercept=1098 Defense=975
+  Game 03: A_reward=1 B_reward=-1 ELO: Intercept=1108 Defense=965
+  Game 04: A_reward=-1 B_reward=1 ELO: Intercept=1118 Defense=955
+
+==================================================
+  Hybrid vs Defense  (4 games)
+==================================================
+  Game 01: A_reward=-1 B_reward=1 ELO: Hybrid=884 Defense=968
+  Game 02: A_reward=1 B_reward=-1 ELO: Hybrid=872 Defense=980
+  Game 03: A_reward=-1 B_reward=1 ELO: Hybrid=861 Defense=992
+  Game 04: A_reward=1 B_reward=-1 ELO: Hybrid=850 Defense=1002
+
+==================================================
+FINAL ELO STANDINGS
+  Intercept: ELO=1118  W=11 L=1 D=0  AvgReward=1
+  Rush: ELO=1030  W=7 L=5 D=0  AvgReward=0
+  Defense: ELO=1002  W=6 L=6 D=0  AvgReward=0
+  Hybrid: ELO=850  W=0 L=12 D=0  AvgReward=-1
+
+  CHAMPION: Intercept
+==================================================
