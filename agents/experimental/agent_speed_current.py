@@ -1,8 +1,11 @@
-# HYPOTHESIS: Macro change: More aggressive early game targeting focusing on lowest ship counts instead of distance purely, and relaxing the reserve requirement slightly.
+# HYPOTHESIS: Micro-Tune: Tweaked safety buffer and cap on launches per planet.
 # ROUND: 1 | DATE: 2024-05-21
 # BASED ON: champion.py
-# CHANGELOG: Changed `score_target_state` logic in heuristic to prioritize vulnerable targets over close targets. Reduced required_reserve from 3 to 1 and min_surplus from 10/16 to 5/10.
-
+# CHANGELOG: Increased safety_threshold buffer from 1.35 to 1.45. Increased launches cap from 4 to 6.
+"""
+Orbit Wars Agent — V6 (Tactical Action-Generation MCTS + Advanced Evaluator)
+Submit this file directly: kaggle competitions submit orbit-wars -f submission.py -m "V6 Tactical MCTS"
+"""
 """
 Orbit Wars Agent — V6 (Tactical Action-Generation MCTS + Advanced Evaluator)
 Submit this file directly: kaggle competitions submit orbit-wars -f submission.py -m "V6 Tactical MCTS"
@@ -326,7 +329,7 @@ def heuristic_moves(state, pid, exclude_targets=None):
         production_turns = int(math.floor(threat_eta))
         garrison_at_impact = p['ships'] + p['prod'] * production_turns
 
-        safety_threshold = int(incoming_ships * 1.35 + 4)
+        safety_threshold = int(incoming_ships * 1.45 + 4)
         if garrison_at_impact >= safety_threshold:
             continue
 
@@ -361,7 +364,7 @@ def heuristic_moves(state, pid, exclude_targets=None):
         min_surplus = 5 if len(mine) > 3 else 10
 
         # V8 feature: cap launches at 4 per planet to avoid complete exhaustion
-        while available_ships[src['id']] >= 4 and launches < 4:
+        while available_ships[src['id']] >= 4 and launches < 6:
             best_score = -float('inf')
             best_tgt = None
             best_angle = None
@@ -420,7 +423,7 @@ def heuristic_moves(state, pid, exclude_targets=None):
 
                     needed = int(math.ceil(needed))
                     # V8 multiplier: never lose a capture to production drift
-                    send = min(int(available_ships[src['id']] - 1), int(needed * 1.35 + 4))
+                    send = min(int(available_ships[src['id']] - 1), int(needed * 1.45 + 4))
 
                 if angle is None or send < 3 or available_ships[src['id']] - send < required_reserve:
                     continue

@@ -1,8 +1,11 @@
-# HYPOTHESIS: Macro change: More aggressive early game targeting focusing on lowest ship counts instead of distance purely, and relaxing the reserve requirement slightly.
+# HYPOTHESIS: Macro change: Adjusted defensive triage logic. Defend check radius increased to 50, threat_eta increased to 30 to be more proactive in defense.
 # ROUND: 1 | DATE: 2024-05-21
 # BASED ON: champion.py
-# CHANGELOG: Changed `score_target_state` logic in heuristic to prioritize vulnerable targets over close targets. Reduced required_reserve from 3 to 1 and min_surplus from 10/16 to 5/10.
-
+# CHANGELOG: Defend check radius increased to 50, threat_eta increased to 30.
+"""
+Orbit Wars Agent — V6 (Tactical Action-Generation MCTS + Advanced Evaluator)
+Submit this file directly: kaggle competitions submit orbit-wars -f submission.py -m "V6 Tactical MCTS"
+"""
 """
 Orbit Wars Agent — V6 (Tactical Action-Generation MCTS + Advanced Evaluator)
 Submit this file directly: kaggle competitions submit orbit-wars -f submission.py -m "V6 Tactical MCTS"
@@ -309,7 +312,7 @@ def heuristic_moves(state, pid, exclude_targets=None):
                 continue
             # Defend check radius is 40.0 (V8 feature)
             dist = math.hypot(p['x'] - f['x'], p['y'] - f['y'])
-            if dist <= 40.0 and is_heading_to(f, p):
+            if dist <= 50.0 and is_heading_to(f, p):
                 incoming_fleets.append((f, dist))
 
         if not incoming_fleets:
@@ -320,7 +323,7 @@ def heuristic_moves(state, pid, exclude_targets=None):
         threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
 
         # Proactive defense only if threat is close (V8 feature: threat_eta < 20.0)
-        if threat_eta >= 20.0:
+        if threat_eta >= 30.0:
             continue
 
         production_turns = int(math.floor(threat_eta))
@@ -381,9 +384,9 @@ def heuristic_moves(state, pid, exclude_targets=None):
                 if incoming_threats:
                     closest_threat = min(incoming_threats, key=lambda f: math.hypot(src['x'] - f['x'], src['y'] - f['y']))
                     tdist = math.hypot(src['x'] - closest_threat['x'], src['y'] - closest_threat['y'])
-                    if tdist <= 40.0:
+                    if tdist <= 50.0:
                         threat_eta = tdist / max(spd(closest_threat['ships']), 0.1)
-                        if threat_eta < 20.0:
+                        if threat_eta < 30.0:
                             incoming_ships = sum(f['ships'] for f in incoming_threats)
                             garrison_at_impact = available_ships[src['id']] + src['prod'] * int(math.floor(threat_eta))
                             # If sending ships would leave us vulnerable to this close threat
