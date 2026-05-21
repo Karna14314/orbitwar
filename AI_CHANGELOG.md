@@ -16,3 +16,6 @@ Partial Successes (worth hybridizing):
 
 Tomorrow's Suggested Direction:
 Based on today's results, the most promising untried hypothesis is: Hybridizing the Champion's MCTS with the refined lead-target intercept logic to capture moving targets more effectively.
+
+[2024-05-21]
+Challenger agents/experimental/agent_wave_current.py defeated champion 5-4. Updated champion.

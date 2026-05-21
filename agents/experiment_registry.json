@@ -1,1 +1,45 @@
-{}
+{
+  "champion": "agents/champion.py",
+  "score": 1205.0,
+  "date": "2024-05-21",
+  "experiments": [
+    {
+      "name": "agent_wave_current",
+      "type": "macro",
+      "description": "More aggressive early game targeting focusing on lowest ship counts instead of distance purely, and relaxing the reserve requirement slightly.",
+      "wins": 6,
+      "losses": 3,
+      "score": 3,
+      "champion_challenge_wins": 5,
+      "champion_challenge_losses": 4
+    },
+    {
+      "name": "agent_triage_current",
+      "type": "macro",
+      "description": "Adjusted defensive triage logic. Defend check radius increased to 50, threat_eta increased to 30.",
+      "wins": 3,
+      "losses": 6,
+      "score": -3
+    },
+    {
+      "name": "agent_speed_current",
+      "type": "micro",
+      "description": "Increased safety_threshold buffer from 1.35 to 1.45. Increased launches cap from 4 to 6.",
+      "wins": 3,
+      "losses": 6,
+      "score": -3
+    },
+    {
+      "name": "agent_hybrid_current",
+      "type": "micro",
+      "description": "Send min requirement lowered from 3 to 1.",
+      "wins": 6,
+      "losses": 3,
+      "score": 3
+    }
+  ],
+  "failure_modes": [
+    "Over-committing to defense without strong MCTS logic causes losses.",
+    "Increasing safety threshold and launches arbitrarily causes inefficiency against strong MCTS opponents."
+  ]
+}
