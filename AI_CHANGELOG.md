@@ -19,3 +19,19 @@ Based on today's results, the most promising untried hypothesis is: Hybridizing 
 
 [2024-05-21]
 Challenger agents/experimental/agent_wave_current.py defeated champion 5-4. Updated champion.
+
+[2024-05-22]
+Experiments Run:
+- agent_wave_current.py: 3 wins. Pure heuristic wave expansion. Good early but lacked intercept.
+- agent_triage_current.py: 1 wins. Pure heuristic triage. Abandoning planets was too passive.
+- agent_speed_current.py: 2 wins. Pure heuristic speed scaling. Buffer was robust but targeting basic.
+- agent_hybrid_current.py: 4 wins. Pure heuristic hybrid. Won the internal tournament.
+
+Champion Challenge:
+agent_hybrid_current.py won the challenge against the MCTS champion. It avoids CPU timeouts and efficiently grabs co-orbiting moving targets.
+
+Failed Combinations (do not retry):
+- Using MCTS for complex deep searches frequently times out (> 400s observed in evaluation) under constraints. Stick to pure fast heuristics.
+
+Partial Successes:
+- Hybrid physics-based trajectory prediction combined with early-game neutral expansion multiplier dominated.

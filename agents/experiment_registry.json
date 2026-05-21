@@ -1,7 +1,7 @@
 {
   "champion": "agents/champion.py",
-  "score": 1205.0,
-  "date": "2024-05-21",
+  "score": 1206.0,
+  "date": "2026-05-21",
   "experiments": [
     {
       "name": "agent_wave_current",
@@ -36,10 +36,45 @@
       "wins": 6,
       "losses": 3,
       "score": 3
+    },
+    {
+      "name": "agent_wave_current",
+      "type": "macro",
+      "description": "Pure heuristic wave expansion, co-orbiting neighbor targeting.",
+      "wins": 3,
+      "losses": 3,
+      "score": 0
+    },
+    {
+      "name": "agent_triage_current",
+      "type": "macro",
+      "description": "Pure heuristic defensive triage, abandon doomed planets, contested zone distance checks.",
+      "wins": 1,
+      "losses": 5,
+      "score": -4
+    },
+    {
+      "name": "agent_speed_current",
+      "type": "micro",
+      "description": "Pure heuristic dynamic safety buffer max(needed*1.35, needed+4) considering log speed.",
+      "wins": 2,
+      "losses": 4,
+      "score": -2
+    },
+    {
+      "name": "agent_hybrid_current",
+      "type": "hybrid",
+      "description": "Pure heuristic intercept target trajectory combined with fast early expansion score multiplier.",
+      "wins": 4,
+      "losses": 2,
+      "score": 2,
+      "champion_challenge_wins": 5,
+      "champion_challenge_losses": 4
     }
   ],
   "failure_modes": [
     "Over-committing to defense without strong MCTS logic causes losses.",
-    "Increasing safety threshold and launches arbitrarily causes inefficiency against strong MCTS opponents."
+    "Increasing safety threshold and launches arbitrarily causes inefficiency against strong MCTS opponents.",
+    "MCTS is computationally heavy and times out; pure heuristic rules win by zero CPU timeouts."
   ]
 }
