@@ -2,9 +2,9 @@ import sys
 from kaggle_environments import make
 
 agents = [
-    "agents/experimental/agent_rush_current.py",
-    "agents/experimental/agent_intercept_current.py",
-    "agents/experimental/agent_defense_current.py",
+    "agents/experimental/agent_wave_current.py",
+    "agents/experimental/agent_speed_current.py",
+    "agents/experimental/agent_triage_current.py",
     "agents/experimental/agent_hybrid_current.py"
 ]
 

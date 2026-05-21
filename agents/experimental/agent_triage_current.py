@@ -1,3 +1,4 @@
+# ROUND: 2 | DATE: 2024-05-22
 # HYPOTHESIS: Defensive triage: Abandon doomed planets if surrounded by 3+ enemies and enemy ETA < allied ETA. Contested zone guard checks distance. Pure heuristic.
 # DATE: 2024-05-22
 # BASED ON: agents/experimental/agent_triage_current.py (overwritten)
@@ -124,7 +125,7 @@ def heuristic_moves(state, pid):
         closest_ally_dist = min((math.hypot(m['x']-p['x'], m['y']-p['y']) for m in mine if m['id'] != p['id']), default=999)
         ally_eta = closest_ally_dist / 2.0
 
-        if enemy_neighbors >= 3 and threat_eta < ally_eta:
+        if enemy_neighbors >= 4 and threat_eta < ally_eta + 5:
             # Abandon ship
             evac_angle = math.atan2(50 - p['y'], 50 - p['x']) # Towards sun
             evac_send = int(avail[p['id']] * 0.9)

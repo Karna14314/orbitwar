@@ -6,7 +6,7 @@ champion = "agents/champion.py"
 
 results = {"challenger": 0, "champion": 0, "ties": 0}
 
-for i in range(2):
+for i in range(9):
     print(f"Match {i+1}: {best_agent} vs {champion}")
     env = make("orbit_wars", configuration={"seed": 100 + i}, debug=False)
     try:

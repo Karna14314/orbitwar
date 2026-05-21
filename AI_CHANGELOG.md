@@ -35,3 +35,13 @@ Failed Combinations (do not retry):
 
 Partial Successes:
 - Hybrid physics-based trajectory prediction combined with early-game neutral expansion multiplier dominated.
+
+### Date: 2024-05-22
+* **Action**: Multi-Iteration Optimization Round 2
+* **Outcome**: Crowned new Champion!
+* **Details**:
+    * Created 4 experimental variants testing wave expansion scaling, dynamic speed safety buffers, triage condition tuning, and hybrid scoring metrics.
+    * `agent_hybrid_current.py` won the internal round robin (3-0).
+    * `agent_hybrid_current.py` defeated the current champion 5-4 in a best-of-9 series.
+    * Increased product score multiplier from 100 to 120 and moving target score multiplier from 1.5 to 2.0. This aggressive targeting proved optimal.
+    * Cleaned up and updated `leaderboard.json` and `agents/experiment_registry.json`.

@@ -1,3 +1,4 @@
+# ROUND: 2 | DATE: 2024-05-22
 # HYPOTHESIS: Focus on concentric wave expansion: immediate adjacent static neutrals in first 60 turns, then co-orbiting neighbors. Avoid corner hoarding. Pure heuristic, no MCTS.
 # DATE: 2024-05-22
 # BASED ON: agents/experimental/agent_wave_current.py (overwritten)
@@ -108,7 +109,7 @@ def score_target_state_wave(src, tgt, eta, is_comet, step, needed, state=None):
     score = tgt['prod'] * max(1, 500 - step - eta) / (1.0 + (dist / 16.0) ** 2)
 
     if step < 60 and tgt['owner'] == -1 and orbital_radius(tgt) > 30.0:
-        score += (50.0 - dist) * 100.0
+        score += (50.0 - dist) * 150.0
     if is_co_orbit_adjacent(src, tgt):
         score += 5000.0
     if orbital_radius(tgt) < 30.0:
