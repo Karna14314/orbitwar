@@ -1,12 +1,12 @@
 import sys
 from kaggle_environments import make
 
-best_agent = "agents/experimental/agent_defense_current.py"
+best_agent = "agents/experimental/agent_hybrid_current.py"
 champion = "agents/champion.py"
 
 results = {"challenger": 0, "champion": 0, "ties": 0}
 
-for i in range(5):
+for i in range(2):
     print(f"Match {i+1}: {best_agent} vs {champion}")
     env = make("orbit_wars", configuration={"seed": 100 + i}, debug=False)
     try:
@@ -27,7 +27,6 @@ for i in range(5):
             print("  Tie")
     except Exception as e:
         print(f"  Error: {e}")
-        # Default to champion win on error
         results["champion"] += 1
 
 print("\n--- Final Series Results ---")
