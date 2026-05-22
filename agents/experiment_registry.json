@@ -1,7 +1,7 @@
 {
   "champion": "agents/champion.py",
-  "score": 1206.0,
-  "date": "2026-05-21",
+  "score": 1208.0,
+  "date": "2024-05-22",
   "experiments": [
     {
       "name": "agent_wave_current",
@@ -68,6 +68,16 @@
       "wins": 4,
       "losses": 2,
       "score": 2,
+      "champion_challenge_wins": 5,
+      "champion_challenge_losses": 4
+    },
+    {
+      "name": "agent_hybrid_current_v2",
+      "type": "micro",
+      "description": "Increased product score multiplier to 120 and moving target multiplier to 2.0.",
+      "wins": 3,
+      "losses": 0,
+      "score": 3,
       "champion_challenge_wins": 5,
       "champion_challenge_losses": 4
     }

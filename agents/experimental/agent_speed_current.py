@@ -1,3 +1,4 @@
+# ROUND: 2 | DATE: 2024-05-22
 # HYPOTHESIS: Speed-Scaling Interceptions: Size attacks with dynamic safety buffer max(needed*1.35, needed+4) utilizing logarithmic fleet speed. Pure heuristic.
 # DATE: 2024-05-22
 # BASED ON: agents/experimental/agent_speed_current.py (overwritten)
@@ -121,7 +122,7 @@ def heuristic_moves(state, pid):
             if tgt['owner'] >= 0: needed_base += tgt['prod'] * eta_est
 
             # Dynamic safety buffer utilizing speed scaling
-            send_amt = max(int(needed_base * 1.35), int(needed_base + 4))
+            send_amt = max(int(needed_base * 1.40), int(needed_base + 3))
 
             if avail[src['id']] < send_amt + 2: continue
 
