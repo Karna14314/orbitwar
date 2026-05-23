@@ -1,9 +1,7 @@
-# ROUND: 2 | DATE: 2024-05-22
-# HYPOTHESIS: Speed-Scaling Interceptions: Size attacks with dynamic safety buffer max(needed*1.35, needed+4) utilizing logarithmic fleet speed. Pure heuristic.
+# HYPOTHESIS: Speed Scaling: Focuses on large-scale, high-speed fleet logistics.
 # DATE: 2024-05-22
-# BASED ON: agents/experimental/agent_speed_current.py (overwritten)
-# CHANGELOG: Removed MCTS entirely. Enforced fast pure heuristic approach. Added speed-scaling interception logic.
-
+# BASED ON: agents/champion.py
+# CHANGELOG: Adjusted safety buffer scaling.
 import math
 
 def spd(n):
@@ -115,23 +113,23 @@ def heuristic_moves(state, pid):
         if avail[src['id']] < 5: continue
         best_tgt, best_score, best_angle, best_send = None, -float('inf'), None, 0
         for tgt in targets:
-            # Need to find base needed to use dynamic buffer
-            dist = math.hypot(src['x']-tgt['x'], src['y']-tgt['y'])
-            eta_est = dist / spd(max(3.0, tgt['ships']))
-            needed_base = tgt['ships'] + 1
-            if tgt['owner'] >= 0: needed_base += tgt['prod'] * eta_est
-
-            # Dynamic safety buffer utilizing speed scaling
-            send_amt = max(int(needed_base * 1.40), int(needed_base + 3))
-
-            if avail[src['id']] < send_amt + 2: continue
-
-            angle, eta = find_angle_state(src, tgt, send_amt, state['angular_velocity'], state['ips'], state['step'], state)
+            send = min(int(avail[src['id']] - 1), tgt['ships'] + 5)
+            if send < 3: continue
+            angle, eta = find_angle_state(src, tgt, send, state['angular_velocity'], state['ips'], state['step'], state)
             if angle is None: continue
+            needed = tgt['ships'] + 1
+            if tgt['owner'] >= 0: needed += tgt['prod'] * eta
+            needed = int(math.ceil(needed))
+            best_send_val = max(int(needed * 1.35), needed + 4)
+            if avail[src['id']] < best_send_val: continue
 
-            score = tgt['prod'] * 100 / (dist + 1.0)
+            # Physics-based scoring - favor moving targets if eta is small
+            score = tgt['prod'] * 120 / (eta + 0.5)
+            if tgt['id'] in state['moving']: score *= 2.0
+            if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
+
             if score > best_score:
-                best_score, best_tgt, best_angle, best_send = score, tgt, angle, send_amt
+                best_score, best_tgt, best_angle, best_send = score, tgt, angle, best_send_val
         if best_tgt:
             moves.append([src['id'], best_angle, best_send])
             avail[src['id']] -= best_send

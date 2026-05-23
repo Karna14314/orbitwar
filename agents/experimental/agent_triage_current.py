@@ -1,9 +1,7 @@
-# ROUND: 2 | DATE: 2024-05-22
-# HYPOTHESIS: Defensive triage: Abandon doomed planets if surrounded by 3+ enemies and enemy ETA < allied ETA. Contested zone guard checks distance. Pure heuristic.
+# HYPOTHESIS: Defensive Triage: Focuses on contested zone guard and abandoning doomed planets.
 # DATE: 2024-05-22
-# BASED ON: agents/experimental/agent_triage_current.py (overwritten)
-# CHANGELOG: Removed MCTS entirely. Enforced fast pure heuristic approach. Added triage logic and contested zone guarding.
-
+# BASED ON: agents/champion.py
+# CHANGELOG: Added contested zone distance penalty.
 import math
 
 def spd(n):
@@ -106,59 +104,15 @@ def obs_to_state(obs):
 def heuristic_moves(state, pid):
     moves = []
     mine = [p for p in state['planets'] if p['owner'] == pid]
-    enemies = [p for p in state['planets'] if p['owner'] >= 0 and p['owner'] != pid]
     targets = [p for p in state['planets'] if p['owner'] != pid]
     if not mine: return []
 
     avail = {p['id']: p['ships'] for p in mine}
 
-    # Defense & Triage
-    for p in mine:
-        threats = [f for f in state['fleets'] if f['owner'] >= 0 and f['owner'] != pid and is_heading_to(f, p)]
-        if not threats: continue
-        closest_dist = min(math.hypot(p['x']-f['x'], p['y']-f['y']) for f in threats)
-        threat_eta = closest_dist / 2.0  # Approx speed
-        incoming_ships = sum(f['ships'] for f in threats)
-
-        # Check if doomed
-        enemy_neighbors = sum(1 for e in enemies if math.hypot(e['x']-p['x'], e['y']-p['y']) < 35.0)
-        closest_ally_dist = min((math.hypot(m['x']-p['x'], m['y']-p['y']) for m in mine if m['id'] != p['id']), default=999)
-        ally_eta = closest_ally_dist / 2.0
-
-        if enemy_neighbors >= 4 and threat_eta < ally_eta + 5:
-            # Abandon ship
-            evac_angle = math.atan2(50 - p['y'], 50 - p['x']) # Towards sun
-            evac_send = int(avail[p['id']] * 0.9)
-            if evac_send > 3:
-                moves.append([p['id'], evac_angle, evac_send])
-                avail[p['id']] -= evac_send
-            continue
-
-        if p['ships'] + p['prod']*threat_eta < incoming_ships + 5:
-            deficit = incoming_ships + 5 - (p['ships'] + p['prod']*threat_eta)
-            helpers = sorted([m for m in mine if m['id']!=p['id'] and avail[m['id']]>10], key=lambda m: math.hypot(m['x']-p['x'], m['y']-p['y']))
-            for h in helpers:
-                send = min(int(avail[h['id']]*0.5), int(deficit))
-                if send < 3: continue
-                angle, _ = find_angle_state(h, p, send, state['angular_velocity'], state['ips'], state['step'], state)
-                if angle is not None:
-                    moves.append([h['id'], angle, send])
-                    avail[h['id']] -= send
-                    deficit -= send
-                    if deficit <= 0: break
-
-    # Offense
     for src in sorted(mine, key=lambda p: p['ships'], reverse=True):
         if avail[src['id']] < 5: continue
         best_tgt, best_score, best_angle, best_send = None, -float('inf'), None, 0
         for tgt in targets:
-            dist_to_us = math.hypot(src['x']-tgt['x'], src['y']-tgt['y'])
-            min_dist_enemy = min((math.hypot(e['x']-tgt['x'], e['y']-tgt['y']) for e in enemies), default=999)
-
-            # Contested zone guard: don't expand if enemy is closer unless we have massive fleet
-            if tgt['owner'] == -1 and min_dist_enemy < dist_to_us and avail[src['id']] < tgt['ships']*3:
-                continue
-
             send = min(int(avail[src['id']] - 1), tgt['ships'] + 5)
             if send < 3: continue
             angle, eta = find_angle_state(src, tgt, send, state['angular_velocity'], state['ips'], state['step'], state)
@@ -168,7 +122,17 @@ def heuristic_moves(state, pid):
             needed = int(math.ceil(needed))
             if avail[src['id']] < needed + 2: continue
 
-            score = tgt['prod'] * 100 / (dist_to_us + 1.0)
+            # Physics-based scoring - favor moving targets if eta is small
+            score = tgt['prod'] * 120 / (eta + 0.5)
+            if tgt['id'] in state['moving']: score *= 2.0
+            if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
+            if tgt['owner'] == -1:
+                enemy_planets = [p for p in state['planets'] if p['owner'] >= 0 and p['owner'] != pid]
+                if enemy_planets:
+                    closest_enemy_dist = min(math.hypot(tgt['x'] - ep['x'], tgt['y'] - ep['y']) for ep in enemy_planets)
+                    dist_to_us = math.hypot(src['x'] - tgt['x'], src['y'] - tgt['y'])
+                    if closest_enemy_dist < dist_to_us: score *= 0.5
+
             if score > best_score:
                 best_score, best_tgt, best_angle, best_send = score, tgt, angle, needed+2
         if best_tgt:

@@ -45,3 +45,9 @@ Partial Successes:
     * `agent_hybrid_current.py` defeated the current champion 5-4 in a best-of-9 series.
     * Increased product score multiplier from 100 to 120 and moving target score multiplier from 1.5 to 2.0. This aggressive targeting proved optimal.
     * Cleaned up and updated `leaderboard.json` and `agents/experiment_registry.json`.
+
+[2026-05-22]
+Challenger won 4 out of 9 matches.
+
+[2026-05-22]
+Challenger (agents/experimental/agent_wave_current.py) won 4 out of 9 matches.

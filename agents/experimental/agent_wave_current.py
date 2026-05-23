@@ -1,21 +1,17 @@
-# ROUND: 2 | DATE: 2024-05-22
-# HYPOTHESIS: Focus on concentric wave expansion: immediate adjacent static neutrals in first 60 turns, then co-orbiting neighbors. Avoid corner hoarding. Pure heuristic, no MCTS.
+# HYPOTHESIS: Wave Expansion: Focuses on concentric wave expansion and co-orbiting ring captures.
 # DATE: 2024-05-22
-# BASED ON: agents/experimental/agent_wave_current.py (overwritten)
-# CHANGELOG: Removed MCTS entirely. Enforced fast pure heuristic approach. Added pure wave expansion targeting priorities.
-
+# BASED ON: agents/champion.py
+# CHANGELOG: Added co-orbiting score multiplier.
 import math
 
 def spd(n):
-    if n <= 1:
-        return 1.0
+    if n <= 1: return 1.0
     return 1.0 + 5.0 * (math.log(n) / math.log(1000)) ** 1.5
 
 def segment_intersects_circle(x1, y1, x2, y2, cx, cy, r):
     vx, vy = x2 - x1, y2 - y1
     len2 = vx*vx + vy*vy
-    if len2 == 0:
-        return (x1-cx)**2 + (y1-cy)**2 <= r*r
+    if len2 == 0: return (x1-cx)**2 + (y1-cy)**2 <= r*r
     t = max(0.0, min(1.0, ((cx-x1)*vx + (cy-y1)*vy) / len2))
     nearest_x, nearest_y = x1 + t*vx, y1 + t*vy
     return (nearest_x-cx)**2 + (nearest_y-cy)**2 <= r*r
@@ -39,8 +35,7 @@ def get_target_pos(src, tgt, vel, ips, step, tick, state=None):
                 idx = group['planet_ids'].index(tgt['id'])
                 path = group['paths'][idx]
                 p_idx = group['path_index'] + tick
-                if 0 <= p_idx < len(path):
-                    return path[p_idx][0], path[p_idx][1]
+                if 0 <= p_idx < len(path): return path[p_idx][0], path[p_idx][1]
                 else: return None, None
     is_moving = False
     if state and 'moving' in state: is_moving = tgt['id'] in state['moving']
@@ -52,12 +47,8 @@ def get_target_pos(src, tgt, vel, ips, step, tick, state=None):
 
 def find_angle_state(src, tgt, ships, vel, ips, step_or_moving, state=None):
     speed = spd(ships)
-    if isinstance(step_or_moving, bool) or (isinstance(step_or_moving, int) and step_or_moving in (0, 1)):
-        is_moving = bool(step_or_moving)
-        step = state['step'] if state else 0
-    else:
-        step = step_or_moving
-        is_moving = tgt['id'] in state['moving'] if state else False
+    step = state['step'] if state else 0
+    is_moving = tgt['id'] in state['moving'] if state else False
 
     for tick in range(1, 80):
         tx, ty = get_target_pos(src, tgt, vel, ips, step, tick, state)
@@ -73,16 +64,14 @@ def find_angle_state(src, tgt, ships, vel, ips, step_or_moving, state=None):
             base_angle = math.atan2(ty - src['y'], tx - src['x'])
             x_spawn = src['x'] + math.cos(base_angle) * (src['r'] + 0.1)
             y_spawn = src['y'] + math.sin(base_angle) * (src['r'] + 0.1)
-            if not hits_sun(x_spawn, y_spawn, tx, ty, margin=0.6):
-                return base_angle, tick
+            if not hits_sun(x_spawn, y_spawn, tx, ty, margin=0.6): return base_angle, tick
             for off in [0.08, -0.08, 0.15, -0.15, 0.3, -0.3, 0.45, -0.45]:
                 a = base_angle + off
                 x_spawn_off = src['x'] + math.cos(a) * (src['r'] + 0.1)
                 y_spawn_off = src['y'] + math.sin(a) * (src['r'] + 0.1)
                 tx_test = src['x'] + math.cos(a) * dist
                 ty_test = src['y'] + math.sin(a) * dist
-                if not hits_sun(x_spawn_off, y_spawn_off, tx_test, ty_test, margin=0.6):
-                    return a, tick
+                if not hits_sun(x_spawn_off, y_spawn_off, tx_test, ty_test, margin=0.6): return a, tick
     return None, None
 
 def is_heading_to(f, p):
@@ -94,29 +83,6 @@ def is_heading_to(f, p):
     py = f['y'] + vy * proj_len
     perp_dist = math.hypot(px - p['x'], py - p['y'])
     return perp_dist <= p['r'] + 2.0
-
-def orbital_radius(p): return math.hypot(p['x'] - 50, p['y'] - 50)
-def angular_separation(p1, p2):
-    a1 = math.atan2(p1['y'] - 50, p1['x'] - 50)
-    a2 = math.atan2(p2['y'] - 50, p2['x'] - 50)
-    return abs(math.atan2(math.sin(a1 - a2), math.cos(a1 - a2)))
-def is_co_orbit_adjacent(src, tgt, r_tol=8.0, ang_tol=0.40):
-    if abs(orbital_radius(src) - orbital_radius(tgt)) > r_tol: return False
-    return angular_separation(src, tgt) < ang_tol
-
-def score_target_state_wave(src, tgt, eta, is_comet, step, needed, state=None):
-    dist = math.hypot(src['x'] - tgt['x'], src['y'] - tgt['y'])
-    score = tgt['prod'] * max(1, 500 - step - eta) / (1.0 + (dist / 16.0) ** 2)
-
-    if step < 60 and tgt['owner'] == -1 and orbital_radius(tgt) > 30.0:
-        score += (50.0 - dist) * 150.0
-    if is_co_orbit_adjacent(src, tgt):
-        score += 5000.0
-    if orbital_radius(tgt) < 30.0:
-        score += 1500.0
-
-    score -= needed * 15.0
-    return score
 
 def obs_to_state(obs):
     ips = {}
@@ -155,10 +121,17 @@ def heuristic_moves(state, pid):
             if tgt['owner'] >= 0: needed += tgt['prod'] * eta
             needed = int(math.ceil(needed))
             if avail[src['id']] < needed + 2: continue
-            send_amt = needed + 2
-            score = score_target_state_wave(src, tgt, eta, tgt['id'] in state['comet_planet_ids'], state['step'], needed, state)
+
+            # Physics-based scoring - favor moving targets if eta is small
+            score = tgt['prod'] * 120 / (eta + 0.5)
+            if tgt['id'] in state['moving']: score *= 2.0
+            if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
+            dist_src_sun = math.hypot(src['x'] - 50, src['y'] - 50)
+            dist_tgt_sun = math.hypot(tgt['x'] - 50, tgt['y'] - 50)
+            if abs(dist_src_sun - dist_tgt_sun) < 15.0: score *= 1.5
+
             if score > best_score:
-                best_score, best_tgt, best_angle, best_send = score, tgt, angle, send_amt
+                best_score, best_tgt, best_angle, best_send = score, tgt, angle, needed+2
         if best_tgt:
             moves.append([src['id'], best_angle, best_send])
             avail[src['id']] -= best_send

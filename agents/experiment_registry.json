@@ -1,90 +1,102 @@
 {
-  "champion": "agents/champion.py",
-  "score": 1208.0,
-  "date": "2024-05-22",
-  "experiments": [
-    {
-      "name": "agent_wave_current",
-      "type": "macro",
-      "description": "More aggressive early game targeting focusing on lowest ship counts instead of distance purely, and relaxing the reserve requirement slightly.",
-      "wins": 6,
-      "losses": 3,
-      "score": 3,
-      "champion_challenge_wins": 5,
-      "champion_challenge_losses": 4
-    },
-    {
-      "name": "agent_triage_current",
-      "type": "macro",
-      "description": "Adjusted defensive triage logic. Defend check radius increased to 50, threat_eta increased to 30.",
-      "wins": 3,
-      "losses": 6,
-      "score": -3
-    },
-    {
-      "name": "agent_speed_current",
-      "type": "micro",
-      "description": "Increased safety_threshold buffer from 1.35 to 1.45. Increased launches cap from 4 to 6.",
-      "wins": 3,
-      "losses": 6,
-      "score": -3
-    },
-    {
-      "name": "agent_hybrid_current",
-      "type": "micro",
-      "description": "Send min requirement lowered from 3 to 1.",
-      "wins": 6,
-      "losses": 3,
-      "score": 3
-    },
-    {
-      "name": "agent_wave_current",
-      "type": "macro",
-      "description": "Pure heuristic wave expansion, co-orbiting neighbor targeting.",
-      "wins": 3,
-      "losses": 3,
-      "score": 0
-    },
-    {
-      "name": "agent_triage_current",
-      "type": "macro",
-      "description": "Pure heuristic defensive triage, abandon doomed planets, contested zone distance checks.",
-      "wins": 1,
-      "losses": 5,
-      "score": -4
-    },
-    {
-      "name": "agent_speed_current",
-      "type": "micro",
-      "description": "Pure heuristic dynamic safety buffer max(needed*1.35, needed+4) considering log speed.",
-      "wins": 2,
-      "losses": 4,
-      "score": -2
-    },
-    {
-      "name": "agent_hybrid_current",
-      "type": "hybrid",
-      "description": "Pure heuristic intercept target trajectory combined with fast early expansion score multiplier.",
-      "wins": 4,
-      "losses": 2,
-      "score": 2,
-      "champion_challenge_wins": 5,
-      "champion_challenge_losses": 4
-    },
-    {
-      "name": "agent_hybrid_current_v2",
-      "type": "micro",
-      "description": "Increased product score multiplier to 120 and moving target multiplier to 2.0.",
-      "wins": 3,
-      "losses": 0,
-      "score": 3,
-      "champion_challenge_wins": 5,
-      "champion_challenge_losses": 4
-    }
-  ],
-  "failure_modes": [
-    "Over-committing to defense without strong MCTS logic causes losses.",
-    "Increasing safety threshold and launches arbitrarily causes inefficiency against strong MCTS opponents.",
-    "MCTS is computationally heavy and times out; pure heuristic rules win by zero CPU timeouts."
-  ]
+    "champion": "agents/champion.py",
+    "score": 1208.0,
+    "date": "2024-05-22",
+    "experiments": [
+        {
+            "name": "agent_wave_current",
+            "type": "macro",
+            "description": "More aggressive early game targeting focusing on lowest ship counts instead of distance purely, and relaxing the reserve requirement slightly.",
+            "wins": 6,
+            "losses": 3,
+            "score": 3,
+            "champion_challenge_wins": 5,
+            "champion_challenge_losses": 4
+        },
+        {
+            "name": "agent_triage_current",
+            "type": "macro",
+            "description": "Adjusted defensive triage logic. Defend check radius increased to 50, threat_eta increased to 30.",
+            "wins": 3,
+            "losses": 6,
+            "score": -3
+        },
+        {
+            "name": "agent_speed_current",
+            "type": "micro",
+            "description": "Increased safety_threshold buffer from 1.35 to 1.45. Increased launches cap from 4 to 6.",
+            "wins": 3,
+            "losses": 6,
+            "score": -3
+        },
+        {
+            "name": "agent_hybrid_current",
+            "type": "micro",
+            "description": "Send min requirement lowered from 3 to 1.",
+            "wins": 6,
+            "losses": 3,
+            "score": 3
+        },
+        {
+            "name": "agent_wave_current",
+            "type": "macro",
+            "description": "Pure heuristic wave expansion, co-orbiting neighbor targeting.",
+            "wins": 3,
+            "losses": 3,
+            "score": 0
+        },
+        {
+            "name": "agent_triage_current",
+            "type": "macro",
+            "description": "Pure heuristic defensive triage, abandon doomed planets, contested zone distance checks.",
+            "wins": 1,
+            "losses": 5,
+            "score": -4
+        },
+        {
+            "name": "agent_speed_current",
+            "type": "micro",
+            "description": "Pure heuristic dynamic safety buffer max(needed*1.35, needed+4) considering log speed.",
+            "wins": 2,
+            "losses": 4,
+            "score": -2
+        },
+        {
+            "name": "agent_hybrid_current",
+            "type": "hybrid",
+            "description": "Pure heuristic intercept target trajectory combined with fast early expansion score multiplier.",
+            "wins": 4,
+            "losses": 2,
+            "score": 2,
+            "champion_challenge_wins": 5,
+            "champion_challenge_losses": 4
+        },
+        {
+            "name": "agent_hybrid_current_v2",
+            "type": "micro",
+            "description": "Increased product score multiplier to 120 and moving target multiplier to 2.0.",
+            "wins": 3,
+            "losses": 0,
+            "score": 3,
+            "champion_challenge_wins": 5,
+            "champion_challenge_losses": 4
+        },
+        {
+            "name": "run_2",
+            "wins": 4,
+            "losses": 5,
+            "score": -1
+        },
+        {
+            "name": "run_2",
+            "wins": 4,
+            "losses": 5,
+            "score": -1
+        }
+    ],
+    "failure_modes": [
+        "Over-committing to defense without strong MCTS logic causes losses.",
+        "Increasing safety threshold and launches arbitrarily causes inefficiency against strong MCTS opponents.",
+        "MCTS is computationally heavy and times out; pure heuristic rules win by zero CPU timeouts."
+    ]
 }
