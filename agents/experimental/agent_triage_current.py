@@ -1,7 +1,8 @@
-# HYPOTHESIS: Defensive Triage: Focuses on contested zone guard and abandoning doomed planets.
-# DATE: 2024-05-22
+# HYPOTHESIS: Defensive Triage penalizing scores for doomed targets in contested zones.
+# DATE: 2024-05-23
 # BASED ON: agents/champion.py
-# CHANGELOG: Added contested zone distance penalty.
+# CHANGELOG: Added contested zone penalty to target scoring.
+
 import math
 
 def spd(n):
@@ -122,16 +123,15 @@ def heuristic_moves(state, pid):
             needed = int(math.ceil(needed))
             if avail[src['id']] < needed + 2: continue
 
+            dist_to_us = math.hypot(src['x'] - tgt['x'], src['y'] - tgt['y'])
+            enemy_planets = [p for p in state['planets'] if p['owner'] not in (pid, -1)]
+            min_dist_to_enemy = min([math.hypot(ep['x'] - tgt['x'], ep['y'] - tgt['y']) for ep in enemy_planets]) if enemy_planets else float('inf')
+
             # Physics-based scoring - favor moving targets if eta is small
             score = tgt['prod'] * 120 / (eta + 0.5)
+            if min_dist_to_enemy < dist_to_us: score /= 2.0
             if tgt['id'] in state['moving']: score *= 2.0
             if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
-            if tgt['owner'] == -1:
-                enemy_planets = [p for p in state['planets'] if p['owner'] >= 0 and p['owner'] != pid]
-                if enemy_planets:
-                    closest_enemy_dist = min(math.hypot(tgt['x'] - ep['x'], tgt['y'] - ep['y']) for ep in enemy_planets)
-                    dist_to_us = math.hypot(src['x'] - tgt['x'], src['y'] - tgt['y'])
-                    if closest_enemy_dist < dist_to_us: score *= 0.5
 
             if score > best_score:
                 best_score, best_tgt, best_angle, best_send = score, tgt, angle, needed+2

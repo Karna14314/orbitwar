@@ -1,7 +1,7 @@
 {
     "champion": "agents/champion.py",
-    "score": 1208.0,
-    "date": "2024-05-22",
+    "score": 1210.0,
+    "date": "2026-05-23",
     "experiments": [
         {
             "name": "agent_wave_current",
@@ -92,6 +92,11 @@
             "wins": 4,
             "losses": 5,
             "score": -1
+        },
+        {
+            "name": "agent_speed_current",
+            "wins": 7,
+            "losses": 2
         }
     ],
     "failure_modes": [

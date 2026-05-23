@@ -51,3 +51,6 @@ Challenger won 4 out of 9 matches.
 
 [2026-05-22]
 Challenger (agents/experimental/agent_wave_current.py) won 4 out of 9 matches.
+
+[2026-05-23]
+Challenger (agents/experimental/agent_speed_current.py) won 7 out of 9 matches. Updated champion.

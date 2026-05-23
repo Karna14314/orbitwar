@@ -1,7 +1,7 @@
-# HYPOTHESIS: Hybrid Intercept & Expansion: Integrates physics-based trajectory prediction with aggressive expansion. Pure heuristic.
-# DATE: 2024-05-22
-# BASED ON: agents/experimental/agent_hybrid_current.py (overwritten)
-# CHANGELOG: Removed MCTS. Enforced fast pure heuristic approach. Hybridizes accurate intercept targeting with aggressive wave expansion rules.
+# HYPOTHESIS: Speed-Scaling Interceptions with dynamic safety buffer max(needed*1.35, needed+4).
+# DATE: 2024-05-23
+# BASED ON: agents/champion.py
+# CHANGELOG: Adjusted best_send to use dynamic safety buffer.
 
 import math
 
@@ -121,7 +121,8 @@ def heuristic_moves(state, pid):
             needed = tgt['ships'] + 1
             if tgt['owner'] >= 0: needed += tgt['prod'] * eta
             needed = int(math.ceil(needed))
-            if avail[src['id']] < needed + 2: continue
+            required_send = max(int(needed * 1.35), needed + 4)
+            if avail[src['id']] < required_send: continue
 
             # Physics-based scoring - favor moving targets if eta is small
             score = tgt['prod'] * 120 / (eta + 0.5)
@@ -129,7 +130,7 @@ def heuristic_moves(state, pid):
             if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
 
             if score > best_score:
-                best_score, best_tgt, best_angle, best_send = score, tgt, angle, needed+2
+                best_score, best_tgt, best_angle, best_send = score, tgt, angle, required_send
         if best_tgt:
             moves.append([src['id'], best_angle, best_send])
             avail[src['id']] -= best_send

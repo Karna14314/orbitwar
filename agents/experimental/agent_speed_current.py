@@ -1,7 +1,8 @@
-# HYPOTHESIS: Speed Scaling: Focuses on large-scale, high-speed fleet logistics.
-# DATE: 2024-05-22
+# HYPOTHESIS: Speed-Scaling Interceptions with dynamic safety buffer max(needed*1.35, needed+4).
+# DATE: 2024-05-23
 # BASED ON: agents/champion.py
-# CHANGELOG: Adjusted safety buffer scaling.
+# CHANGELOG: Adjusted best_send to use dynamic safety buffer.
+
 import math
 
 def spd(n):
@@ -120,8 +121,8 @@ def heuristic_moves(state, pid):
             needed = tgt['ships'] + 1
             if tgt['owner'] >= 0: needed += tgt['prod'] * eta
             needed = int(math.ceil(needed))
-            best_send_val = max(int(needed * 1.35), needed + 4)
-            if avail[src['id']] < best_send_val: continue
+            required_send = max(int(needed * 1.35), needed + 4)
+            if avail[src['id']] < required_send: continue
 
             # Physics-based scoring - favor moving targets if eta is small
             score = tgt['prod'] * 120 / (eta + 0.5)
@@ -129,7 +130,7 @@ def heuristic_moves(state, pid):
             if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
 
             if score > best_score:
-                best_score, best_tgt, best_angle, best_send = score, tgt, angle, best_send_val
+                best_score, best_tgt, best_angle, best_send = score, tgt, angle, required_send
         if best_tgt:
             moves.append([src['id'], best_angle, best_send])
             avail[src['id']] -= best_send

@@ -1,7 +1,8 @@
-# HYPOTHESIS: Wave Expansion: Focuses on concentric wave expansion and co-orbiting ring captures.
-# DATE: 2024-05-22
+# HYPOTHESIS: Concentric Wave Expansion focusing strongly on early neutral planets with a 3.0x multiplier.
+# DATE: 2024-05-23
 # BASED ON: agents/champion.py
-# CHANGELOG: Added co-orbiting score multiplier.
+# CHANGELOG: Increased early wave expansion multiplier from 1.8 to 3.0.
+
 import math
 
 def spd(n):
@@ -125,10 +126,7 @@ def heuristic_moves(state, pid):
             # Physics-based scoring - favor moving targets if eta is small
             score = tgt['prod'] * 120 / (eta + 0.5)
             if tgt['id'] in state['moving']: score *= 2.0
-            if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
-            dist_src_sun = math.hypot(src['x'] - 50, src['y'] - 50)
-            dist_tgt_sun = math.hypot(tgt['x'] - 50, tgt['y'] - 50)
-            if abs(dist_src_sun - dist_tgt_sun) < 15.0: score *= 1.5
+            if tgt['owner'] == -1 and state['step'] < 60: score *= 3.0 # wave expansion integration
 
             if score > best_score:
                 best_score, best_tgt, best_angle, best_send = score, tgt, angle, needed+2
