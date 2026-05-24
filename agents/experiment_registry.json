@@ -1,7 +1,7 @@
 {
     "champion": "agents/champion.py",
-    "score": 1208.0,
-    "date": "2024-05-22",
+    "score": 1209.0,
+    "date": "2026-05-24",
     "experiments": [
         {
             "name": "agent_wave_current",
@@ -92,6 +92,13 @@
             "wins": 4,
             "losses": 5,
             "score": -1
+        },
+        {
+            "name": "agent_hybrid_current",
+            "type": "hybrid",
+            "description": "Adjusted scoring multiplier to 150 for moving targets.",
+            "champion_challenge_wins": 5,
+            "champion_challenge_losses": 4
         }
     ],
     "failure_modes": [

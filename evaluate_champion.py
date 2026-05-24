@@ -1,7 +1,8 @@
 import sys
 from kaggle_environments import make
 
-best_agent = "agents/experimental/agent_hybrid_current.py"
+with open("best_agent.txt", "r") as f:
+    best_agent = f.read().strip()
 champion = "agents/champion.py"
 
 results = {"challenger": 0, "champion": 0, "ties": 0}

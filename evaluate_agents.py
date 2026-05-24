@@ -12,32 +12,33 @@ results = {agent: {"wins": 0, "losses": 0, "ties": 0, "score": 0} for agent in a
 
 for i in range(len(agents)):
     for j in range(i + 1, len(agents)):
-        print(f"Match: {agents[i]} vs {agents[j]}")
-        env = make("orbit_wars", configuration={"seed": 42 + i + j}, debug=False)
-        try:
-            env.run([agents[i], agents[j]])
-            final_step = env.steps[-1]
+        for match_idx in range(10):
+            print(f"Match {match_idx+1}: {agents[i]} vs {agents[j]}")
+            env = make("orbit_wars", configuration={"seed": 42 + i + j + match_idx * 100}, debug=False)
+            try:
+                env.run([agents[i], agents[j]])
+                final_step = env.steps[-1]
 
-            p0_reward = final_step[0].reward if final_step[0].reward is not None else 0
-            p1_reward = final_step[1].reward if final_step[1].reward is not None else 0
+                p0_reward = final_step[0].reward if final_step[0].reward is not None else 0
+                p1_reward = final_step[1].reward if final_step[1].reward is not None else 0
 
-            results[agents[i]]["score"] += p0_reward
-            results[agents[j]]["score"] += p1_reward
+                results[agents[i]]["score"] += p0_reward
+                results[agents[j]]["score"] += p1_reward
 
-            if p0_reward > p1_reward:
-                results[agents[i]]["wins"] += 1
-                results[agents[j]]["losses"] += 1
-                print(f"  {agents[i]} won")
-            elif p1_reward > p0_reward:
-                results[agents[j]]["wins"] += 1
-                results[agents[i]]["losses"] += 1
-                print(f"  {agents[j]} won")
-            else:
-                results[agents[i]]["ties"] += 1
-                results[agents[j]]["ties"] += 1
-                print("  Tie")
-        except Exception as e:
-            print(f"  Error: {e}")
+                if p0_reward > p1_reward:
+                    results[agents[i]]["wins"] += 1
+                    results[agents[j]]["losses"] += 1
+                    print(f"  {agents[i]} won")
+                elif p1_reward > p0_reward:
+                    results[agents[j]]["wins"] += 1
+                    results[agents[i]]["losses"] += 1
+                    print(f"  {agents[j]} won")
+                else:
+                    results[agents[i]]["ties"] += 1
+                    results[agents[j]]["ties"] += 1
+                    print("  Tie")
+            except Exception as e:
+                print(f"  Error: {e}")
 
 print("\n--- Results ---")
 best_agent = None
