@@ -1,7 +1,7 @@
-# HYPOTHESIS: Hybrid Intercept & Expansion: Integrates physics-based trajectory prediction with aggressive expansion. Pure heuristic.
-# DATE: 2024-05-22
-# BASED ON: agents/experimental/agent_hybrid_current.py (overwritten)
-# CHANGELOG: Removed MCTS. Enforced fast pure heuristic approach. Hybridizes accurate intercept targeting with aggressive wave expansion rules.
+# HYPOTHESIS: Integrates physics-based trajectory prediction with aggressive expansion rules. Pure heuristic.
+# DATE: 2026-05-24
+# BASED ON: agents/champion.py
+# CHANGELOG: Adjusted scoring multiplier to 150 for moving targets.
 
 import math
 
@@ -124,7 +124,7 @@ def heuristic_moves(state, pid):
             if avail[src['id']] < needed + 2: continue
 
             # Physics-based scoring - favor moving targets if eta is small
-            score = tgt['prod'] * 120 / (eta + 0.5)
+            score = tgt['prod'] * 150 / (eta + 0.5)
             if tgt['id'] in state['moving']: score *= 2.0
             if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
 

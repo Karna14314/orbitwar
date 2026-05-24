@@ -1,7 +1,8 @@
-# HYPOTHESIS: Supreme Hybrid: Integrates speed scaling, triage, and wave expansion.
-# DATE: 2024-05-22
+# HYPOTHESIS: Integrates physics-based trajectory prediction with aggressive expansion rules. Pure heuristic.
+# DATE: 2026-05-24
 # BASED ON: agents/champion.py
-# CHANGELOG: Combined speed, wave and triage logics.
+# CHANGELOG: Adjusted scoring multiplier to 150 for moving targets.
+
 import math
 
 def spd(n):
@@ -120,25 +121,15 @@ def heuristic_moves(state, pid):
             needed = tgt['ships'] + 1
             if tgt['owner'] >= 0: needed += tgt['prod'] * eta
             needed = int(math.ceil(needed))
-            best_send_val = max(int(needed * 1.35), needed + 4)
-            if avail[src['id']] < best_send_val: continue
+            if avail[src['id']] < needed + 2: continue
 
             # Physics-based scoring - favor moving targets if eta is small
-            score = tgt['prod'] * 120 / (eta + 0.5)
+            score = tgt['prod'] * 150 / (eta + 0.5)
             if tgt['id'] in state['moving']: score *= 2.0
             if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
-            dist_src_sun = math.hypot(src['x'] - 50, src['y'] - 50)
-            dist_tgt_sun = math.hypot(tgt['x'] - 50, tgt['y'] - 50)
-            if abs(dist_src_sun - dist_tgt_sun) < 15.0: score *= 1.5
-            if tgt['owner'] == -1:
-                enemy_planets = [p for p in state['planets'] if p['owner'] >= 0 and p['owner'] != pid]
-                if enemy_planets:
-                    closest_enemy_dist = min(math.hypot(tgt['x'] - ep['x'], tgt['y'] - ep['y']) for ep in enemy_planets)
-                    dist_to_us = math.hypot(src['x'] - tgt['x'], src['y'] - tgt['y'])
-                    if closest_enemy_dist < dist_to_us: score *= 0.5
 
             if score > best_score:
-                best_score, best_tgt, best_angle, best_send = score, tgt, angle, best_send_val
+                best_score, best_tgt, best_angle, best_send = score, tgt, angle, needed+2
         if best_tgt:
             moves.append([src['id'], best_angle, best_send])
             avail[src['id']] -= best_send
