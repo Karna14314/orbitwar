@@ -1,7 +1,7 @@
-# HYPOTHESIS: Concentric wave expansion and co-orbiting ring captures. Pure heuristic.
-# DATE: 2026-05-24
-# BASED ON: agents/champion.py
-# CHANGELOG: Multiplier for wave expansion increased to 5.0.
+# HYPOTHESIS: Increase wave expansion step window to 80 and multiplier to 2.5
+# ROUND: 1 | DATE: 2026-05-24
+# BASED ON: champion.py
+# CHANGELOG: wave step 60->80, mult 1.8->2.5
 
 import math
 
@@ -124,9 +124,9 @@ def heuristic_moves(state, pid):
             if avail[src['id']] < needed + 2: continue
 
             # Physics-based scoring - favor moving targets if eta is small
-            score = tgt['prod'] * 120 / (eta + 0.5)
+            score = tgt['prod'] * 150 / (eta + 0.5)
             if tgt['id'] in state['moving']: score *= 2.0
-            if tgt['owner'] == -1 and state['step'] < 60: score *= 5.0 # wave expansion integration
+            if tgt['owner'] == -1 and state['step'] < 80: score *= 2.5 # wave expansion integration
 
             if score > best_score:
                 best_score, best_tgt, best_angle, best_send = score, tgt, angle, needed+2

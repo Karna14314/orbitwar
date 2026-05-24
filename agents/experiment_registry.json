@@ -99,6 +99,13 @@
             "description": "Adjusted scoring multiplier to 150 for moving targets.",
             "champion_challenge_wins": 5,
             "champion_challenge_losses": 4
+        },
+        {
+            "name": "agent_speed_current",
+            "type": "micro",
+            "description": "Dynamic speed scaling log max(int(needed * 1.35), needed + 4)",
+            "champion_challenge_wins": 7,
+            "champion_challenge_losses": 2
         }
     ],
     "failure_modes": [

@@ -1,7 +1,7 @@
-# HYPOTHESIS: Integrates physics-based trajectory prediction with aggressive expansion rules. Pure heuristic.
-# DATE: 2026-05-24
-# BASED ON: agents/champion.py
-# CHANGELOG: Adjusted scoring multiplier to 150 for moving targets.
+# HYPOTHESIS: Hyper-optimize moving target multipliers to 160 and 2.2
+# ROUND: 1 | DATE: 2026-05-24
+# BASED ON: champion.py
+# CHANGELOG: 150->160, 2.0->2.2
 
 import math
 
@@ -124,8 +124,8 @@ def heuristic_moves(state, pid):
             if avail[src['id']] < needed + 2: continue
 
             # Physics-based scoring - favor moving targets if eta is small
-            score = tgt['prod'] * 150 / (eta + 0.5)
-            if tgt['id'] in state['moving']: score *= 2.0
+            score = tgt['prod'] * 160 / (eta + 0.5)
+            if tgt['id'] in state['moving']: score *= 2.2
             if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
 
             if score > best_score:

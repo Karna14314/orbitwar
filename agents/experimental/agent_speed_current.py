@@ -1,7 +1,7 @@
-# HYPOTHESIS: Large-scale, high-speed fleet logistics maximizing logarithmic speed scaling. Pure heuristic.
-# DATE: 2026-05-24
-# BASED ON: agents/champion.py
-# CHANGELOG: Replaced static send logic with dynamic safety buffer send = max(int(needed * 1.35), needed + 4).
+# HYPOTHESIS: Dynamic speed scaling log max(int(needed * 1.35), needed + 4)
+# ROUND: 1 | DATE: 2026-05-24
+# BASED ON: champion.py
+# CHANGELOG: needed+2 -> max(needed*1.35, needed+4)
 
 import math
 
@@ -121,10 +121,10 @@ def heuristic_moves(state, pid):
             needed = tgt['ships'] + 1
             if tgt['owner'] >= 0: needed += tgt['prod'] * eta
             needed = int(math.ceil(needed))
-            if avail[src['id']] < max(int(needed * 1.35), needed + 4): continue
+            if avail[src['id']] < needed + 2: continue
 
             # Physics-based scoring - favor moving targets if eta is small
-            score = tgt['prod'] * 120 / (eta + 0.5)
+            score = tgt['prod'] * 150 / (eta + 0.5)
             if tgt['id'] in state['moving']: score *= 2.0
             if tgt['owner'] == -1 and state['step'] < 60: score *= 1.8 # wave expansion integration
 
