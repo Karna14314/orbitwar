@@ -10,7 +10,7 @@ import json, time, importlib.util, os
 os.chdir(os.path.join(os.path.dirname(__file__), '..'))
 
 AGENTS = {
-    'Champion': 'agents/champion.py',
+    'Champion': 'submission.py',
     'V8': '../submission_v8.py',
     'V9': '../submission_v9.py',
     'Rush': 'agents/experimental/agent_rush_current.py',

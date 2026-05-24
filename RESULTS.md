@@ -6,3 +6,9 @@
 | 2026-05-22 | agents/champion.py | 1208.0 |
 | 2026-05-22 | agents/champion.py | 1208.0 |
 | 2026-05-24 | agents/champion.py | 1209.0 |
+
+
+## Refactoring Log - 2024-05-24
+Consolidated logs from runner outputs into archive/logs.
+Moved legacy agents and broken agents to archive.
+Removed duplicate nested 'orbit-wars' directory.

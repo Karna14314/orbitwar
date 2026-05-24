@@ -171,3 +171,44 @@ def agent(obs):
 | `sunRadius` | 10.0 | Radius of the sun |
 | `boardSize` | 100.0 | Board dimensions |
 | `cometSpeed` | 4.0 | Comet speed (units/turn) |
+
+
+
+## Repository Structure
+
+```text
+orbitwar/
+├── agents/                  # Live, high-performing agents
+│   ├── production/          # Currently active competition agents
+│   │   └── submission_v12.py (Main submission)
+│   ├── baselines/           # Active benchmarks and historical milestone agents
+│   │   ├── submission_v11.py
+│   │   └── submission_intercept.py
+│   └── components/          # Extracted modular libraries (simulators, utils)
+│       └── _sim.py
+├── benchmarks/              # Scripts used for running tournaments and evaluation
+│   ├── tournament/          # Hyperparameter search and test runner suites
+│   │   ├── runner.py
+│   │   └── hyper_search.py
+│   └── evaluation/          # One-off agent validation scripts
+│       ├── evaluate_agents.py
+│       └── tune_eval.py
+├── docs/                    # Integrated documentation (No duplicates)
+│   ├── ARCHITECTURE.md
+│   ├── AGENTS.md
+│   └── jules_analysis.md
+├── notebooks/               # Jupyter/Research environments
+│   └── orbit_wars_notebook.ipynb
+├── archive/                 # Obsolete, legacy, or broken components
+│   ├── failed_v10/          # Grouping the bugged V10 timeline files
+│   ├── legacy_v8_v9/        # Grouping low ELO historical attempts
+│   └── legacy_modules/      # Old training/reinforcement learning scripts
+├── config/                  # Hyperparameters and tournament registries
+│   ├── hyper_params.json
+│   ├── experiment_registry.json
+│   └── leaderboard.json
+├── .gitignore
+├── README.md
+├── RESULTS.md
+└── AI_CHANGELOG.md
+```
