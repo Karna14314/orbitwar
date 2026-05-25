@@ -155,3 +155,7 @@ Challenger agents/experimental/agent_hybrid_current.py defeated champion 5-4. Up
 
 ### Failure Modes Identified
 - Defensive triage agents suffer from lack of early expansion momentum and get overwhelmed later.
+
+
+[2024-05-25]
+Challenger agents/experimental/agent_wave_current.py defeated champion 5-4. Updated champion.

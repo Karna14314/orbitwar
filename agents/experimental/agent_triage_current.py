@@ -1,20 +1,7 @@
-# HYPOTHESIS: Strict defensive triage implemented: doomed planets surrounded by enemies will not be reinforced.
-# DATE: 2024-05-25
-# BASED ON: submission_v12.py
-# CHANGELOG: Initial triage agent to skip reinforcing planets with 3+ enemy bases nearby.
-"""
-Orbit Wars Agent — V11 GRANDMASTER
-Self-contained, highly optimized single-file agent.
-
-Key Advancements:
-1. Event-Driven Closed-Form Bidding: Solves timeline bidding instantly without slow simulation loops.
-2. Dynamic Surface Evasion: Computes maximum angular offset asin(R/D) to guarantee hit vectors.
-3. Multi-Planet Obstacle Avoidance: Checks both the central sun and intermediate planets.
-4. Aggressive Micro-Fleet Expansion: Secures neutral bases from turn 1 with minimal overhead.
-5. Synchronized Reinforcements: Ensures helper fleets arrive strictly before threats.
-6. Correct 1000-Step Horizons: Restores late-game strategic aggressiveness.
-"""
-
+# HYPOTHESIS: Adjust defensive behavior threshold
+# ROUND: 1 | DATE: 2024-05-25
+# BASED ON: champion.py
+# CHANGELOG: Adjust defensive behavior threshold
 import math
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -111,7 +98,7 @@ def find_angle(src, tgt, ships, vel, ips, step, state, max_ticks=80):
 
         # Dynamic evasion offset sweep
         max_off = math.asin(min(0.99, tgt['r'] / max(dist, 1.0)))
-        for factor in [0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 0.95, -0.95]:
+        for factor in [0.08, -0.08, 0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 0.95, -0.95]:
             a = base_angle + factor * max_off
             sx2 = src['x'] + math.cos(a) * (src['r'] + 0.1)
             sy2 = src['y'] + math.sin(a) * (src['r'] + 0.1)
@@ -357,17 +344,13 @@ def compute_moves(state, pid):
 
         production_turns = int(math.floor(threat_eta))
         garrison = p['ships'] + p['prod'] * production_turns
-        safety_need = int(incoming_ships * 1.3 + 5)
+        safety_need = int(incoming_ships * 1.1 + 3)
 
         if garrison >= safety_need:
             continue
 
         deficit = safety_need - garrison
         if deficit < 3:
-            continue
-
-        enemy_bases_nearby = sum(1 for ep in targets if ep['owner'] >= 0 and math.hypot(p['x'] - ep['x'], p['y'] - ep['y']) < 40.0)
-        if enemy_bases_nearby >= 3:
             continue
 
         # Sort helpers by proximity to target

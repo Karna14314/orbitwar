@@ -1,20 +1,7 @@
-# HYPOTHESIS: Hybrid approach integrating aggressive expansion with physics trajectory offsets for better routing.
-# DATE: 2024-05-25
-# BASED ON: submission_v12.py
-# CHANGELOG: Initial hybrid agent blending wave expansion and dynamic trajectory sweeps.
-"""
-Orbit Wars Agent — V11 GRANDMASTER
-Self-contained, highly optimized single-file agent.
-
-Key Advancements:
-1. Event-Driven Closed-Form Bidding: Solves timeline bidding instantly without slow simulation loops.
-2. Dynamic Surface Evasion: Computes maximum angular offset asin(R/D) to guarantee hit vectors.
-3. Multi-Planet Obstacle Avoidance: Checks both the central sun and intermediate planets.
-4. Aggressive Micro-Fleet Expansion: Secures neutral bases from turn 1 with minimal overhead.
-5. Synchronized Reinforcements: Ensures helper fleets arrive strictly before threats.
-6. Correct 1000-Step Horizons: Restores late-game strategic aggressiveness.
-"""
-
+# HYPOTHESIS: Adjust EV additive value
+# ROUND: 1 | DATE: 2024-05-25
+# BASED ON: champion.py
+# CHANGELOG: Adjust EV additive value
 import math
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -284,7 +271,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
     if tgt['owner'] == -1:
         neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
         ev *= neutral_mult
-        ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
+        ev += max(10.0, 300.0 - 0.5 * step - 20.0 * len(mine))
 
     # Over-extension early-game penalties
     enemy_planets = [p for p in planets if p['owner'] >= 0 and p['owner'] != pid]
