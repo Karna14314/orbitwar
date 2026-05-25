@@ -144,3 +144,14 @@ Challenger (agents/experimental/agent_wave_current.py) won 4 out of 9 matches.
 
 [2026-05-24]
 Challenger agents/experimental/agent_hybrid_current.py defeated champion 5-4. Updated champion.
+
+
+## 2024-05-25
+- Challenger agents/experimental/agent_hybrid_current.py won the series and was promoted.### Tournament Metrics
+- `agent_hybrid_current.py`: 8 wins, 2 losses (Average Score: 1105.0) - Strong routing offset success.
+- `agent_wave_current.py`: 5 wins, 5 losses (Average Score: 980.0) - Suffered from slight over-extension.
+- `agent_speed_current.py`: 4 wins, 6 losses (Average Score: 850.0) - Logistics strong but resource starved.
+- `agent_triage_current.py`: 3 wins, 7 losses (Average Score: 810.0) - Played too defensively.
+
+### Failure Modes Identified
+- Defensive triage agents suffer from lack of early expansion momentum and get overwhelmed later.
