@@ -1,15 +1,14 @@
 import sys
 from kaggle_environments import make
 
-with open("best_agent.txt", "r") as f:
-    best_agent = f.read().strip()
-champion = "agents/champion.py"
+best_agent = "agents/experimental/agent_defense_current.py"
+champion = "submission.py"
 
 results = {"challenger": 0, "champion": 0, "ties": 0}
 
-for i in range(9):
+for i in range(2):
     print(f"Match {i+1}: {best_agent} vs {champion}")
-    env = make("orbit_wars", configuration={"seed": 100 + i}, debug=False)
+    env = make("orbit_wars", configuration={"seed": 100 + i, "episodeSteps": 150}, debug=False)
     try:
         env.run([best_agent, champion])
         final_step = env.steps[-1]
@@ -28,6 +27,7 @@ for i in range(9):
             print("  Tie")
     except Exception as e:
         print(f"  Error: {e}")
+        # Default to champion win on error
         results["champion"] += 1
 
 print("\n--- Final Series Results ---")

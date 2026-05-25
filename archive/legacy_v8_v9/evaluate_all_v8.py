@@ -15,9 +15,10 @@ def load_agent(filepath):
     return namespace["agent"]
 
 print("Loading agents...")
-upgraded_mcts = load_agent("submission.py")
-v8_aggressor = load_agent("submission_v8.py")
-champion_tuned = load_agent("orbit-wars/agents/champion_tuned.py")
+v8_agent = load_agent("submission_v8.py")
+mcts_hybrid = load_agent("submission.py")
+champion = load_agent("orbit-wars/agents/champion.py")
+champion_tuned = load_agent("archive/experimental/champion_tuned.py")
 
 def run_match(agent_a, agent_b, name_a, name_b, n_games=6):
     print(f"\n=============================================================")
@@ -61,5 +62,6 @@ def run_match(agent_a, agent_b, name_a, name_b, n_games=6):
 
 if __name__ == "__main__":
     # Run matches
-    run_match(upgraded_mcts, v8_aggressor, "Upgraded MCTS (V8 Rollouts)", "V8 Aggressor", n_games=6)
-    run_match(upgraded_mcts, champion_tuned, "Upgraded MCTS (V8 Rollouts)", "Champion Tuned MCTS", n_games=6)
+    run_match(v8_agent, mcts_hybrid, "V8 Aggressor", "Hybrid MCTS", n_games=6)
+    run_match(v8_agent, champion, "V8 Aggressor", "Champion MCTS", n_games=6)
+    run_match(v8_agent, champion_tuned, "V8 Aggressor", "Champion Tuned MCTS", n_games=6)
