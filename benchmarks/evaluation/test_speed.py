@@ -10,7 +10,7 @@ def load_agent(filepath):
     return namespace["agent"]
 
 def main():
-    agent = load_agent("submission_v10.py")
+    agent = load_agent("agents/champion.py")
     
     # Mock a large observation with 20 planets and 30 fleets
     planets = []
