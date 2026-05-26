@@ -1,20 +1,7 @@
-# HYPOTHESIS: Maximizing speed logistics by strictly scaling logarithmic fleet sizing to outpace enemies.
-# DATE: 2024-05-25
-# BASED ON: submission_v12.py
-# CHANGELOG: Initial speed agent enforcing max(1.35 * needed, needed + 4) strictly.
-"""
-Orbit Wars Agent — V11 GRANDMASTER
-Self-contained, highly optimized single-file agent.
-
-Key Advancements:
-1. Event-Driven Closed-Form Bidding: Solves timeline bidding instantly without slow simulation loops.
-2. Dynamic Surface Evasion: Computes maximum angular offset asin(R/D) to guarantee hit vectors.
-3. Multi-Planet Obstacle Avoidance: Checks both the central sun and intermediate planets.
-4. Aggressive Micro-Fleet Expansion: Secures neutral bases from turn 1 with minimal overhead.
-5. Synchronized Reinforcements: Ensures helper fleets arrive strictly before threats.
-6. Correct 1000-Step Horizons: Restores late-game strategic aggressiveness.
-"""
-
+# HYPOTHESIS: Adjust send size multiplier
+# ROUND: 1 | DATE: 2024-05-25
+# BASED ON: champion.py
+# CHANGELOG: Adjust send size multiplier
 import math
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -111,7 +98,7 @@ def find_angle(src, tgt, ships, vel, ips, step, state, max_ticks=80):
 
         # Dynamic evasion offset sweep
         max_off = math.asin(min(0.99, tgt['r'] / max(dist, 1.0)))
-        for factor in [0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 0.95, -0.95]:
+        for factor in [0.08, -0.08, 0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 0.95, -0.95]:
             a = base_angle + factor * max_off
             sx2 = src['x'] + math.cos(a) * (src['r'] + 0.1)
             sy2 = src['y'] + math.sin(a) * (src['r'] + 0.1)

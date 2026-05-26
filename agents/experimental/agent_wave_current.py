@@ -1,20 +1,7 @@
-# HYPOTHESIS: Concentric wave expansion heavily prioritized over distance to aggressively secure co-orbiting rings early.
-# DATE: 2024-05-25
-# BASED ON: submission_v12.py
-# CHANGELOG: Initial wave agent based on submission_v12 with heavier co-orbit weighting.
-"""
-Orbit Wars Agent — V11 GRANDMASTER
-Self-contained, highly optimized single-file agent.
-
-Key Advancements:
-1. Event-Driven Closed-Form Bidding: Solves timeline bidding instantly without slow simulation loops.
-2. Dynamic Surface Evasion: Computes maximum angular offset asin(R/D) to guarantee hit vectors.
-3. Multi-Planet Obstacle Avoidance: Checks both the central sun and intermediate planets.
-4. Aggressive Micro-Fleet Expansion: Secures neutral bases from turn 1 with minimal overhead.
-5. Synchronized Reinforcements: Ensures helper fleets arrive strictly before threats.
-6. Correct 1000-Step Horizons: Restores late-game strategic aggressiveness.
-"""
-
+# HYPOTHESIS: Modify early-game EV multiplier
+# ROUND: 1 | DATE: 2024-05-25
+# BASED ON: champion.py
+# CHANGELOG: Modify early-game EV multiplier
 import math
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -111,7 +98,7 @@ def find_angle(src, tgt, ships, vel, ips, step, state, max_ticks=80):
 
         # Dynamic evasion offset sweep
         max_off = math.asin(min(0.99, tgt['r'] / max(dist, 1.0)))
-        for factor in [0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 0.95, -0.95]:
+        for factor in [0.08, -0.08, 0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 0.95, -0.95]:
             a = base_angle + factor * max_off
             sx2 = src['x'] + math.cos(a) * (src['r'] + 0.1)
             sy2 = src['y'] + math.sin(a) * (src['r'] + 0.1)
@@ -278,11 +265,11 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
 
     # Co-orbit Ring adjacency bonus
     if is_co_orbit_adjacent(src, tgt):
-        ev += 8000.0
+        ev += 4000.0
 
     # Aggressive neutral expansion early-game bonuses
     if tgt['owner'] == -1:
-        neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
+        neutral_mult = max(1.0, 3.2 - (step / 350.0) * 2.0)
         ev *= neutral_mult
         ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
 
