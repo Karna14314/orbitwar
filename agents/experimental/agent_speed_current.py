@@ -1,7 +1,7 @@
-# HYPOTHESIS: Adjust send size multiplier
+# HYPOTHESIS: Modify early-game EV multiplier
 # ROUND: 1 | DATE: 2024-05-25
 # BASED ON: champion.py
-# CHANGELOG: Adjust send size multiplier
+# CHANGELOG: Modify early-game EV multiplier
 import math
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
 
     # Aggressive neutral expansion early-game bonuses
     if tgt['owner'] == -1:
-        neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
+        neutral_mult = max(1.0, 3.2 - (step / 350.0) * 2.0)
         ev *= neutral_mult
         ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
 
@@ -444,7 +444,7 @@ def compute_moves(state, pid):
                             send = 0
                             break
 
-                        send = min(int(max_send), max(int(needed * 1.35), needed + 4))
+                        send = min(int(max_send), max(int(needed * 1.15), needed + 2))
 
                     if send < needed or send < 2 or angle is None or needed == 0:
                         continue

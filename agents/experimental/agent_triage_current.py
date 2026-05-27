@@ -1,7 +1,7 @@
-# HYPOTHESIS: Adjust defensive behavior threshold
+# HYPOTHESIS: Modify early-game EV multiplier
 # ROUND: 1 | DATE: 2024-05-25
 # BASED ON: champion.py
-# CHANGELOG: Adjust defensive behavior threshold
+# CHANGELOG: Modify early-game EV multiplier
 import math
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
 
     # Aggressive neutral expansion early-game bonuses
     if tgt['owner'] == -1:
-        neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
+        neutral_mult = max(1.0, 3.2 - (step / 350.0) * 2.0)
         ev *= neutral_mult
         ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
 
@@ -344,7 +344,7 @@ def compute_moves(state, pid):
 
         production_turns = int(math.floor(threat_eta))
         garrison = p['ships'] + p['prod'] * production_turns
-        safety_need = int(incoming_ships * 1.1 + 3)
+        safety_need = int(incoming_ships * 1.3 + 5)
 
         if garrison >= safety_need:
             continue

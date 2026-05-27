@@ -1,7 +1,7 @@
-# HYPOTHESIS: Adjust EV additive value
+# HYPOTHESIS: Modify early-game EV multiplier
 # ROUND: 1 | DATE: 2024-05-25
 # BASED ON: champion.py
-# CHANGELOG: Adjust EV additive value
+# CHANGELOG: Modify early-game EV multiplier
 import math
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -269,9 +269,9 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
 
     # Aggressive neutral expansion early-game bonuses
     if tgt['owner'] == -1:
-        neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
+        neutral_mult = max(1.0, 3.2 - (step / 350.0) * 2.0)
         ev *= neutral_mult
-        ev += max(10.0, 300.0 - 0.5 * step - 20.0 * len(mine))
+        ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
 
     # Over-extension early-game penalties
     enemy_planets = [p for p in planets if p['owner'] >= 0 and p['owner'] != pid]
