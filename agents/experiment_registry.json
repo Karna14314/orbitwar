@@ -1,1 +1,1 @@
-{"trials": [{"agent": "agents/experimental/agent_hybrid_current.py", "won": true, "score": 1210.0}, {"agent": "agents/experimental/agent_wave_current.py", "won": true, "score": 1211.0}]}
+{"trials": [{"agent": "agents/experimental/agent_hybrid_current.py", "won": true, "score": 1210.0}, {"agent": "agents/experimental/agent_wave_current.py", "won": true, "score": 1211.0}, {"agent": "agents/experimental/agent_wave_current.py", "won": true, "score": 1212.0}]}
