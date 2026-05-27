@@ -159,3 +159,6 @@ Challenger agents/experimental/agent_hybrid_current.py defeated champion 5-4. Up
 
 [2024-05-25]
 Challenger agents/experimental/agent_wave_current.py defeated champion 5-4. Updated champion.
+
+[2024-05-26]
+Challenger agents/experimental/agent_wave_current.py defeated champion. Updated champion.
