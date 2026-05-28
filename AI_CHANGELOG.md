@@ -162,3 +162,6 @@ Challenger agents/experimental/agent_wave_current.py defeated champion 5-4. Upda
 
 [2024-05-26]
 Challenger agents/experimental/agent_wave_current.py defeated champion. Updated champion.
+
+[2024-05-26]
+Challenger agents/experimental/agent_hybrid_current.py defeated champion 5-4. Updated champion. It modified the reinforcement threshold down slightly but buffered scaling higher to 1.35 and Threat ETA was bumped up to 35.0 ticks.
