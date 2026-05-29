@@ -165,3 +165,16 @@ Challenger agents/experimental/agent_wave_current.py defeated champion. Updated 
 
 [2024-05-26]
 Challenger agents/experimental/agent_hybrid_current.py defeated champion 5-4. Updated champion. It modified the reinforcement threshold down slightly but buffered scaling higher to 1.35 and Threat ETA was bumped up to 35.0 ticks.
+
+[2024-05-29]
+Experiments Run:
+- agent_wave_current.py: Wave expansion prioritizing inner rings.
+- agent_triage_current.py: Defensive triage abandoning doomed planets early.
+- agent_speed_current.py: Extreme speed scaling with 1.45 buffer.
+- agent_hybrid_current.py: Hybridized strategy.
+
+Internal tournament simulated. `agent_wave_current.py` and `agent_hybrid_current.py` performed similarly in preliminary testing.
+Champion challenge conducted against `agent_wave_current.py`. Result: 1 win, 2 losses (in partial evaluation). The champion retained its title as the challenger did not definitively win.
+Failure Mode Identified: Wave expansion alone without robust intercept logistics is not enough to overcome the champion's balanced buffer sizing.
+
+Next steps: Retain champion, explore alternative scoring heuristics.
