@@ -1,7 +1,7 @@
-# HYPOTHESIS: Defensive Triage abandoning planets with negative effective HP when 3+ enemies are present
-# DATE: 2024-05-29
+# HYPOTHESIS: Defensive Triage to abandon doomed planets surrounded by 3+ enemies
+# ROUND: 2 | DATE: 2024-05-26
 # BASED ON: champion.py
-# CHANGELOG: Threat ETA extended to 45 ticks, abandoning if garrison deficit exceeds 2x reserve
+# CHANGELOG: Implemented triage logic to skip reinforcing planets with 3+ nearby enemies and short ETA
 import math
 
 def spd(n):
@@ -50,76 +50,61 @@ def get_target_pos(tgt, vel, ips, step, tick, state):
     if tgt['id'] in state['moving']: return orbit_pos(tgt['id'], ips, vel, step, tick)
     return tgt['x'], tgt['y']
 
-def find_angle(src, tgt, send, vel, ips, step, state, offsets=[0, 0.1, -0.1, 0.2, -0.2, 0.3, -0.3]):
-    best_angle, best_eta = None, 9999
-    speed = max(spd(send), 0.1)
-    is_comet = tgt['id'] in state['comet_planet_ids']
-    is_moving = tgt['id'] in state['moving']
-
-    if not is_comet and not is_moving:
-        dx, dy = tgt['x'] - src['x'], tgt['y'] - src['y']
-        base_angle = math.atan2(dy, dx)
-        for off in offsets:
-            angle = base_angle + off
-            vx, vy = math.cos(angle) * speed, math.sin(angle) * speed
-            dist = math.hypot(dx, dy)
-            eta = dist / speed
-            hit_x, hit_y = src['x'] + vx * eta, src['y'] + vy * eta
-            if math.hypot(hit_x - tgt['x'], hit_y - tgt['y']) <= tgt['r'] + 1.0:
-                if not hits_any_planet(src['x'], src['y'], hit_x, hit_y, src['id'], tgt['id'], state):
-                    if eta < best_eta: best_angle, best_eta = angle, eta
-        return best_angle, best_eta if best_angle is not None else 9999
-
-    for tick in range(1, 300):
+def find_angle(src, tgt, ships, vel, ips, step, state, max_ticks=80):
+    speed = spd(ships)
+    for tick in range(1, max_ticks):
         tx, ty = get_target_pos(tgt, vel, ips, step, tick, state)
         if tx is None: continue
-        dx, dy = tx - src['x'], ty - src['y']
-        base_angle = math.atan2(dy, dx)
-        dist = math.hypot(dx, dy)
-        eta = dist / speed
-        if abs(eta - tick) < 1.0:
-            for off in offsets:
-                angle = base_angle + off
-                vx, vy = math.cos(angle) * speed, math.sin(angle) * speed
-                hit_x, hit_y = src['x'] + vx * tick, src['y'] + vy * tick
-                if math.hypot(hit_x - tx, hit_y - ty) <= tgt['r'] + 1.0:
-                    if not hits_any_planet(src['x'], src['y'], hit_x, hit_y, src['id'], tgt['id'], state):
-                        if tick < best_eta: best_angle, best_eta = angle, tick
-            if best_angle is not None: break
-    return best_angle, best_eta if best_angle is not None else 9999
+        dist = math.hypot(src['x'] - tx, src['y'] - ty)
+        travel_needed = dist - tgt['r'] - src['r'] - 0.1
+        if speed * tick < travel_needed: continue
+        base_angle = math.atan2(ty - src['y'], tx - src['x'])
+        sx = src['x'] + math.cos(base_angle) * (src['r'] + 0.1)
+        sy = src['y'] + math.sin(base_angle) * (src['r'] + 0.1)
+        if not hits_any_planet(sx, sy, tx, ty, src['id'], tgt['id'], state): return base_angle, tick
+        max_off = math.asin(min(0.99, tgt['r'] / max(dist, 1.0)))
+        for factor in [0.08, -0.08, 0.25, -0.25, 0.5, -0.5, 0.75, -0.75, 0.95, -0.95]:
+            a = base_angle + factor * max_off
+            sx2 = src['x'] + math.cos(a) * (src['r'] + 0.1)
+            sy2 = src['y'] + math.sin(a) * (src['r'] + 0.1)
+            tx2 = src['x'] + math.cos(a) * dist
+            ty2 = src['y'] + math.sin(a) * dist
+            if not hits_any_planet(sx2, sy2, tx2, ty2, src['id'], tgt['id'], state): return a, tick
+    return None, None
 
 def is_heading_to(f, p):
-    dx, dy = math.cos(f['angle']), math.sin(f['angle'])
-    speed = spd(f['ships'])
-    vx, vy = dx * speed, dy * speed
-    t = ((p['x'] - f['x']) * vx + (p['y'] - f['y']) * vy) / (vx * vx + vy * vy)
-    if t < 0: return False
-    nx, ny = f['x'] + t * vx, f['y'] + t * vy
-    return math.hypot(nx - p['x'], ny - p['y']) <= p['r'] + 1.0
+    vx, vy = math.cos(f['angle']), math.sin(f['angle'])
+    dx, dy = p['x'] - f['x'], p['y'] - f['y']
+    proj = dx * vx + dy * vy
+    if proj < 0: return False
+    px, py = f['x'] + vx * proj, f['y'] + vy * proj
+    return math.hypot(px - p['x'], py - p['y']) <= p['r'] + 2.0
 
 def is_co_orbit_adjacent(src, tgt):
-    r1, r2 = math.hypot(src['x'] - 50, src['y'] - 50), math.hypot(tgt['x'] - 50, tgt['y'] - 50)
-    if abs(r1 - r2) > 5.0: return False
-    a1, a2 = math.atan2(src['y'] - 50, src['x'] - 50), math.atan2(tgt['y'] - 50, tgt['x'] - 50)
-    da = abs(math.atan2(math.sin(a1 - a2), math.cos(a1 - a2)))
-    return da < math.pi / 4.0
+    r1 = math.hypot(src['x'] - 50, src['y'] - 50)
+    r2 = math.hypot(tgt['x'] - 50, tgt['y'] - 50)
+    if abs(r1 - r2) > 8.0: return False
+    a1 = math.atan2(src['y'] - 50, src['x'] - 50)
+    a2 = math.atan2(tgt['y'] - 50, tgt['x'] - 50)
+    diff = abs(math.atan2(math.sin(a1 - a2), math.cos(a1 - a2)))
+    return diff < 0.40
 
 def compute_precise_needed_fast(src, tgt, eta, state, pid):
     tgt_fleets = []
     for f in state['fleets']:
-        if f['from_planet_id'] == tgt['id']: continue
         if is_heading_to(f, tgt):
-            dist = math.hypot(f['x'] - tgt['x'], f['y'] - tgt['y'])
-            f_eta = dist / max(spd(f['ships']), 0.1)
+            d = math.hypot(tgt['x'] - f['x'], tgt['y'] - f['y'])
+            f_speed = spd(f['ships'])
+            f_eta = max(1, int(math.ceil(d / max(f_speed, 0.1))))
             tgt_fleets.append({'owner': f['owner'], 'ships': f['ships'], 'eta': f_eta})
     tgt_fleets.sort(key=lambda x: x['eta'])
-    curr_owner, curr_ships, curr_time = tgt['owner'], tgt['ships'], 0.0
-    prod = tgt['prod']
-    for f in tgt_fleets:
-        if f['eta'] >= eta: break
+    curr_owner, curr_ships, curr_time, prod = tgt['owner'], tgt['ships'], 0, tgt['prod']
+    events_before = [f for f in tgt_fleets if f['eta'] <= eta]
+    for f in events_before:
         dt = f['eta'] - curr_time
-        if dt > 0 and curr_owner >= 0: curr_ships += prod * dt
-        curr_time = f['eta']
+        if dt > 0:
+            if curr_owner >= 0: curr_ships += prod * dt
+            curr_time = f['eta']
         if f['owner'] == curr_owner: curr_ships += f['ships']
         else:
             if f['ships'] > curr_ships: curr_owner, curr_ships = f['owner'], f['ships'] - curr_ships
@@ -202,26 +187,21 @@ def compute_moves(state, pid):
         if best_id is not None: pending[best_id] = pending.get(best_id, 0) + f['ships']
     available = {p['id']: p['ships'] for p in mine}
     moves = []
-
-    # TRIAGE PHASE: Abandon logic
     for p in mine:
         enemy_fleets = [(f, math.hypot(p['x'] - f['x'], p['y'] - f['y'])) for f in fleets if f['owner'] != pid and f['owner'] >= 0 and is_heading_to(f, p)]
         if not enemy_fleets: continue
         incoming_ships = sum(f['ships'] for f, _ in enemy_fleets)
         closest_f, closest_dist = min(enemy_fleets, key=lambda x: x[1])
         threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
-        if threat_eta >= 45.0: continue
+        # CHANGELOG: Threat ETA 35.0
+        if threat_eta >= 35.0: continue
+        enemy_planets_near = [ep for ep in planets if ep['owner'] != pid and ep['owner'] >= 0 and math.hypot(ep['x'] - p['x'], ep['y'] - p['y']) < 40.0]
+        if len(enemy_planets_near) >= 3 and threat_eta < 20.0: continue
         production_turns = int(math.floor(threat_eta))
         garrison = p['ships'] + p['prod'] * production_turns
         safety_need = int(incoming_ships * 1.3 + 5)
         if garrison >= safety_need: continue
         deficit = safety_need - garrison
-
-        # If deficit is huge, abandon the planet.
-        if deficit > 30 or deficit > p['ships'] * 1.5:
-            available[p['id']] = max(0, available[p['id']] - 1)  # effectively flag as available to dump ships
-            continue
-
         if deficit < 3: continue
         helpers = sorted([m for m in mine if m['id'] != p['id'] and available[m['id']] > 5], key=lambda m: math.hypot(m['x'] - p['x'], m['y'] - p['y']))
         for h in helpers:
@@ -233,7 +213,6 @@ def compute_moves(state, pid):
                 available[h['id']] -= send
                 deficit -= send
                 if deficit <= 0: break
-
     mine_sorted = sorted(mine, key=lambda p: -available[p['id']])
     this_turn_sent = {p['id']: 0.0 for p in targets}
     for src in mine_sorted:
@@ -275,6 +254,7 @@ def compute_moves(state, pid):
                         if needed == 0:
                             send = 0
                             break
+                        # CHANGELOG: Buffer 1.35
                         send = min(int(max_send), max(int(needed * 1.35), needed + 2))
                     if send < needed or send < 2 or angle is None or needed == 0: continue
                 committed = pending.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
