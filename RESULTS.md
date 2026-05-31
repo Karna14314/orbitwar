@@ -17,3 +17,6 @@ Removed duplicate nested 'orbit-wars' directory.
 | 2024-05-25 | agents/champion.py | 1211.0 |
 | 2024-05-26 | agents/experimental/agent_wave_current.py | 1212.0 |
 | 2024-05-26 | agents/experimental/agent_hybrid_current.py | 1213.0 |
+
+## Round 1
+- agent_wave_current.py beat champion with a score of 1215.0
