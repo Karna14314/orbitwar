@@ -1,7 +1,7 @@
-# HYPOTHESIS: Hybrid Tuning of Speed Buffer and Threat ETA
-# ROUND: 1 | DATE: 2024-05-26
+# HYPOTHESIS: Concentric Wave Expansion focusing on early neutral captures and co-orbiting rings
+# ROUND: 2 | DATE: 2024-05-26
 # BASED ON: champion.py
-# CHANGELOG: Buffer scaling to 1.35 and Threat ETA to 35.0
+# CHANGELOG: Increased neutral multiplier early game and bumped co-orbit adjacency bonus
 import math
 
 def spd(n):
@@ -156,9 +156,9 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
     if min_dist_to_us < 30.0: ev += (30.0 - min_dist_to_us) * 20.0
     if is_co_orbit_adjacent(src, tgt): ev += 4000.0
     if tgt['owner'] == -1:
-        neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
+        neutral_mult = max(1.0, 3.5 - (step / 300.0) * 2.5)
         ev *= neutral_mult
-        ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
+        ev += max(5.0, 350.0 - 0.8 * step - 30.0 * len(mine))
     enemy_planets = [p for p in planets if p['owner'] >= 0 and p['owner'] != pid]
     if enemy_planets:
         min_dist_to_enemy = min(math.hypot(p['x'] - tgt['x'], p['y'] - tgt['y']) for p in enemy_planets)
