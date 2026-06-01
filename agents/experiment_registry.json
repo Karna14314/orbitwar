@@ -1,1 +1,54 @@
-{"trials": [{"agent": "agents/experimental/agent_hybrid_current.py", "won": true, "score": 1210.0}, {"agent": "agents/experimental/agent_wave_current.py", "won": true, "score": 1211.0}, {"agent": "agents/experimental/agent_wave_current.py", "won": true, "score": 1212.0}, {"agent": "agents/experimental/agent_hybrid_current.py", "won": true, "score": 1213.0}, {"agent": "agents/experimental/agent_wave_current.py", "won": false, "score": 1213.0, "failure_mode": "Failed to beat champion in fast evaluations, indicating slightly worse overall strategy or no significant improvement"}]}
+{
+    "trials": [
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": true,
+            "score": 1210.0
+        },
+        {
+            "agent": "agents/experimental/agent_wave_current.py",
+            "won": true,
+            "score": 1211.0
+        },
+        {
+            "agent": "agents/experimental/agent_wave_current.py",
+            "won": true,
+            "score": 1212.0
+        },
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": true,
+            "score": 1213.0
+        },
+        {
+            "agent": "agents/experimental/agent_wave_current.py",
+            "won": false,
+            "score": 1213.0,
+            "failure_mode": "Failed to beat champion in fast evaluations, indicating slightly worse overall strategy or no significant improvement"
+        },
+        {
+            "agent": "agents/experimental/agent_wave_current.py",
+            "won": false,
+            "score": 1210.0,
+            "changelog": "Multiplied inner-ring neutral target EV by 1.7 in first 60 turns"
+        },
+        {
+            "agent": "agents/experimental/agent_speed_current.py",
+            "won": false,
+            "score": 1205.0,
+            "changelog": "Buffer scaling increased to 1.5, prioritizing heavy high-speed attacks"
+        },
+        {
+            "agent": "agents/experimental/agent_triage_current.py",
+            "won": false,
+            "score": 1211.0,
+            "changelog": "Abandon planets if 3+ enemies approaching and threat_eta < 20.0"
+        },
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": true,
+            "score": 1220.0,
+            "changelog": "Merged speed buffer 1.45 and wave EV multiplier 1.4"
+        }
+    ]
+}
