@@ -183,3 +183,6 @@ Next steps: Retain champion, explore alternative scoring heuristics.
 - **Evolution Cycle:** Promoted agent_hybrid_current.py to champion.
 - **Tournament Results:** Tested Wave, Speed, Triage, and Hybrid architectures.
 - **Winner Changes:** Merged speed buffer 1.45 and wave EV multiplier 1.4. Defeated previous champion 6-3.
+
+[2026-06-01]
+Challenger agents/experimental/agent_hybrid_current.py defeated champion. Updated champion. It lowered buffer from 1.45 to 1.35 for leaner scaling interceptions and increased neutral wave EV multiplier to 1.5.
