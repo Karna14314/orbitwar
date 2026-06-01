@@ -178,3 +178,8 @@ Champion challenge conducted against `agent_wave_current.py`. Result: 1 win, 2 l
 Failure Mode Identified: Wave expansion alone without robust intercept logistics is not enough to overcome the champion's balanced buffer sizing.
 
 Next steps: Retain champion, explore alternative scoring heuristics.
+
+## 2026-06-01
+- **Evolution Cycle:** Promoted agent_hybrid_current.py to champion.
+- **Tournament Results:** Tested Wave, Speed, Triage, and Hybrid architectures.
+- **Winner Changes:** Merged speed buffer 1.45 and wave EV multiplier 1.4. Defeated previous champion 6-3.
