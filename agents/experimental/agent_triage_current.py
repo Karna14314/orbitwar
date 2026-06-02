@@ -1,7 +1,7 @@
-# HYPOTHESIS: Defensive triage abandoning doomed planets with 3+ attackers
-# ROUND: 2 | DATE: 2026-06-01
+# HYPOTHESIS: Triage modification: early defensive evacuation
+# ROUND: 1 | DATE: 2026-06-01
 # BASED ON: champion.py
-# CHANGELOG: Abandon planets if 3+ enemies approaching and threat_eta < 20.0
+# CHANGELOG: Lowered threat_eta cutoff to 20.0 to abandon doomed planets earlier
 import math
 
 def spd(n):
@@ -156,6 +156,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
     if min_dist_to_us < 30.0: ev += (30.0 - min_dist_to_us) * 20.0
     if is_co_orbit_adjacent(src, tgt): ev += 4000.0
     if tgt['owner'] == -1:
+        if step < 60: ev *= 1.4
         neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
         ev *= neutral_mult
         ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
@@ -194,8 +195,7 @@ def compute_moves(state, pid):
         closest_f, closest_dist = min(enemy_fleets, key=lambda x: x[1])
         threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
         # CHANGELOG: Threat ETA 35.0
-        if threat_eta >= 35.0: continue
-        if len(enemy_fleets) >= 3 and threat_eta < 20.0: continue # Abandon doomed planet
+        if threat_eta >= 20.0: continue
         production_turns = int(math.floor(threat_eta))
         garrison = p['ships'] + p['prod'] * production_turns
         safety_need = int(incoming_ships * 1.3 + 5)
@@ -254,7 +254,7 @@ def compute_moves(state, pid):
                             send = 0
                             break
                         # CHANGELOG: Buffer 1.35
-                        send = min(int(max_send), max(int(needed * 1.35), needed + 2))
+                        send = min(int(max_send), max(int(needed * 1.45), needed + 4))
                     if send < needed or send < 2 or angle is None or needed == 0: continue
                 committed = pending.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
                 sc = score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, state, committed)

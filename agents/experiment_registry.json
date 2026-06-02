@@ -49,6 +49,33 @@
             "won": true,
             "score": 1220.0,
             "changelog": "Merged speed buffer 1.45 and wave EV multiplier 1.4"
+        },
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": true,
+            "score": 1230.0,
+            "changelog": "Combined 1.35 speed buffer with 1.5 neutral wave EV multiplier"
+        },
+        {
+            "agent": "agents/experimental/agent_wave_current.py",
+            "won": false,
+            "score": 0.0,
+            "failure_mode": "Failed in internal tournament against hybrid variant",
+            "changelog": "Increased early-game neutral capture multiplier to 1.6"
+        },
+        {
+            "agent": "agents/experimental/agent_triage_current.py",
+            "won": false,
+            "score": 0.0,
+            "failure_mode": "Failed in internal tournament, triage was not aggressive enough to secure points",
+            "changelog": "Lowered threat_eta cutoff to 20.0 to abandon doomed planets earlier"
+        },
+        {
+            "agent": "agents/experimental/agent_speed_current.py",
+            "won": false,
+            "score": 0.0,
+            "failure_mode": "Failed in internal tournament",
+            "changelog": "Lowered buffer from 1.45 to 1.35 for leaner scaling interceptions"
         }
     ]
 }
