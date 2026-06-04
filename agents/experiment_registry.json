@@ -76,6 +76,13 @@
             "score": 0.0,
             "failure_mode": "Failed in internal tournament",
             "changelog": "Lowered buffer from 1.45 to 1.35 for leaner scaling interceptions"
+        },
+        {
+            "agent": "agents/experimental/agent_wave_current.py",
+            "won": false,
+            "score": 0.0,
+            "failure_mode": "Failed to win best of 9 vs champion in short evaluations",
+            "changelog": "Increased early-game neutral capture multiplier to 1.7 inside the first 80 turns"
         }
     ]
 }
