@@ -76,6 +76,33 @@
             "score": 0.0,
             "failure_mode": "Failed in internal tournament",
             "changelog": "Lowered buffer from 1.45 to 1.35 for leaner scaling interceptions"
+        },
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": true,
+            "score": 1240.0,
+            "changelog": "Combined speed buffer 1.38, threat ETA 30.0, and wave EV multiplier 1.6"
+        },
+        {
+            "agent": "agents/experimental/agent_wave_current.py",
+            "won": false,
+            "score": 3,
+            "failure_mode": "Tied in internal tournament, failed to advance",
+            "changelog": "Increased step < 60 ev multiplier to 1.8 and base neutral multiplier to 3.0"
+        },
+        {
+            "agent": "agents/experimental/agent_triage_current.py",
+            "won": false,
+            "score": 3,
+            "failure_mode": "Tied in internal tournament, failed to advance",
+            "changelog": "Lowered threat_eta cutoff from 35.0 to 25.0 to abandon doomed planets earlier"
+        },
+        {
+            "agent": "agents/experimental/agent_speed_current.py",
+            "won": false,
+            "score": 3,
+            "failure_mode": "Tied in internal tournament, failed to advance",
+            "changelog": "Increased safety buffer from 1.35 to 1.40"
         }
     ]
 }

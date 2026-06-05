@@ -1,7 +1,7 @@
-# HYPOTHESIS: Decreased speed buffer for leaner ship allocation
-# ROUND: 1 | DATE: 2026-06-01
+# HYPOTHESIS: Micro-tune speed safety buffer
+# ROUND: 1 | DATE: 2026-06-05
 # BASED ON: champion.py
-# CHANGELOG: Lowered buffer from 1.45 to 1.35 for leaner scaling interceptions
+# CHANGELOG: Increased safety buffer from 1.35 to 1.40
 import math
 
 def spd(n):
@@ -156,7 +156,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
     if min_dist_to_us < 30.0: ev += (30.0 - min_dist_to_us) * 20.0
     if is_co_orbit_adjacent(src, tgt): ev += 4000.0
     if tgt['owner'] == -1:
-        if step < 60: ev *= 1.4
+        if step < 60: ev *= 1.5
         neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
         ev *= neutral_mult
         ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
@@ -254,7 +254,7 @@ def compute_moves(state, pid):
                             send = 0
                             break
                         # CHANGELOG: Buffer 1.35
-                        send = min(int(max_send), max(int(needed * 1.35), needed + 4))
+                        send = min(int(max_send), max(int(needed * 1.40), needed + 4))
                     if send < needed or send < 2 or angle is None or needed == 0: continue
                 committed = pending.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
                 sc = score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, state, committed)
