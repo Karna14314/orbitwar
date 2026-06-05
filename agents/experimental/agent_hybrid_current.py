@@ -1,7 +1,7 @@
-# HYPOTHESIS: Hybrid: lower buffer and slightly higher wave expansion EV
-# ROUND: 1 | DATE: 2026-06-01
+# HYPOTHESIS: Hybridizing 1.38 speed buffer, 28.0 triage, and 5000 co-orbit bonus.
+# DATE: 2026-06-01
 # BASED ON: champion.py
-# CHANGELOG: Combined 1.35 speed buffer with 1.5 neutral wave EV multiplier
+# CHANGELOG: Hybridized buffer 1.38, threat_eta 28.0, and co-orbit EV 5000.0
 import math
 
 def spd(n):
@@ -154,7 +154,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
         ev += anchor_bonus
     min_dist_to_us = min(math.hypot(p['x'] - tgt['x'], p['y'] - tgt['y']) for p in mine)
     if min_dist_to_us < 30.0: ev += (30.0 - min_dist_to_us) * 20.0
-    if is_co_orbit_adjacent(src, tgt): ev += 4000.0
+    if is_co_orbit_adjacent(src, tgt): ev += 5000.0
     if tgt['owner'] == -1:
         if step < 60: ev *= 1.5
         neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
@@ -194,8 +194,8 @@ def compute_moves(state, pid):
         incoming_ships = sum(f['ships'] for f, _ in enemy_fleets)
         closest_f, closest_dist = min(enemy_fleets, key=lambda x: x[1])
         threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
-        # CHANGELOG: Threat ETA 35.0
-        if threat_eta >= 35.0: continue
+        # CHANGELOG: Threat ETA 28.0
+        if threat_eta >= 28.0: continue
         production_turns = int(math.floor(threat_eta))
         garrison = p['ships'] + p['prod'] * production_turns
         safety_need = int(incoming_ships * 1.3 + 5)
@@ -253,8 +253,8 @@ def compute_moves(state, pid):
                         if needed == 0:
                             send = 0
                             break
-                        # CHANGELOG: Buffer 1.35
-                        send = min(int(max_send), max(int(needed * 1.35), needed + 4))
+                        # CHANGELOG: Buffer 1.38
+                        send = min(int(max_send), max(int(needed * 1.38), needed + 4))
                     if send < needed or send < 2 or angle is None or needed == 0: continue
                 committed = pending.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
                 sc = score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, state, committed)

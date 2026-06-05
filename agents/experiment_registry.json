@@ -76,6 +76,13 @@
             "score": 0.0,
             "failure_mode": "Failed in internal tournament",
             "changelog": "Lowered buffer from 1.45 to 1.35 for leaner scaling interceptions"
+        },
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": false,
+            "score": 1230.0,
+            "failure_mode": "Failed to beat champion in fast evaluations, indicating slightly worse overall strategy or no significant improvement",
+            "changelog": "Hybridized buffer 1.38, threat_eta 28.0, and co-orbit EV 5000.0"
         }
     ]
 }

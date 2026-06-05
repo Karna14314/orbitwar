@@ -186,3 +186,16 @@ Next steps: Retain champion, explore alternative scoring heuristics.
 
 [2026-06-01]
 Challenger agents/experimental/agent_hybrid_current.py defeated champion. Updated champion. It lowered buffer from 1.45 to 1.35 for leaner scaling interceptions and increased neutral wave EV multiplier to 1.5.
+
+[2024-06-05]
+Experiments Run:
+- agent_wave_current.py: Wave expansion prioritizing inner rings.
+- agent_triage_current.py: Defensive triage abandoning doomed planets early.
+- agent_speed_current.py: Extreme speed scaling with 1.45 buffer.
+- agent_hybrid_current.py: Hybridized strategy.
+
+Internal tournament simulated. `agent_hybrid_current.py` won the internal evaluation.
+Champion challenge conducted against `agent_hybrid_current.py`. Result: 0 wins, 1 losses, 2 ties (in partial evaluation). The champion retained its title as the challenger did not definitively win.
+Failure Mode Identified: The hybridized strategy of buffer 1.38, threat_eta 28.0, and co-orbit EV 5000.0 did not yield an improvement over the champion's balanced parameters.
+
+Next steps: Retain champion, explore alternative scoring heuristics.
