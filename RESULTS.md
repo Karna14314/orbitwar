@@ -20,3 +20,4 @@ Removed duplicate nested 'orbit-wars' directory.
 | 2026-06-01 | agents/experimental/agent_hybrid_current.py | 1220.0 |
 
 | 2026-06-01 | agents/champion.py | 1230.0 |
+| 2026-06-05 | agents/champion.py | 1240.0 |
