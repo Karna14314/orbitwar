@@ -189,3 +189,6 @@ Challenger agents/experimental/agent_hybrid_current.py defeated champion. Update
 
 [2026-06-05]
 Challenger agents/experimental/agent_hybrid_current.py defeated champion. Updated champion. It combined speed buffer 1.38, threat ETA 30.0, and wave EV multiplier 1.6.
+
+[2026-06-06]
+Challenger agents/experimental/agent_hybrid_current.py defeated champion. Updated champion. It combined speed buffer 1.42, threat ETA 25.0, and wave EV multiplier 1.8.
