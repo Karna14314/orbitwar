@@ -1,7 +1,7 @@
-# HYPOTHESIS: Very high speed safety buffer overwhelms opponent defenses
-# DATE: 2026-06-08
-# BASED ON: champion.py
-# CHANGELOG: speed buffer to 1.48
+# HYPOTHESIS: Speed scaling buffer increased to 1.45
+# ROUND: 1 | DATE: 2026-06-08
+# BASED ON: agents/champion.py
+# CHANGELOG: Buffer scaling increased to 1.45
 import math
 
 def spd(n):
@@ -254,7 +254,7 @@ def compute_moves(state, pid):
                             send = 0
                             break
                         # CHANGELOG: Buffer 1.35
-                        send = min(int(max_send), max(int(needed * 1.48), needed + 4))
+                        send = min(int(max_send), max(int(needed * 1.45), needed + 4))
                     if send < needed or send < 2 or angle is None or needed == 0: continue
                 committed = pending.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
                 sc = score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, state, committed)

@@ -1,7 +1,7 @@
-# HYPOTHESIS: Hybrid approach tweaking ETA, wave EV, and buffer thresholds.
-# DATE: 2026-06-07
-# BASED ON: champion.py
-# CHANGELOG: Modified threat_eta to 25.0, wave EV to 1.8, and buffer to 1.42.
+# HYPOTHESIS: Combined speed buffer 1.44 and neutral EV 2.0
+# ROUND: 1 | DATE: 2026-06-08
+# BASED ON: agents/champion.py
+# CHANGELOG: Buffer 1.44, EV 2.0
 import math
 
 def spd(n):
@@ -156,7 +156,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
     if min_dist_to_us < 30.0: ev += (30.0 - min_dist_to_us) * 20.0
     if is_co_orbit_adjacent(src, tgt): ev += 4000.0
     if tgt['owner'] == -1:
-        if step < 60: ev *= 1.8
+        if step < 60: ev *= 2.0
         neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
         ev *= neutral_mult
         ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
@@ -254,7 +254,7 @@ def compute_moves(state, pid):
                             send = 0
                             break
                         # CHANGELOG: Buffer 1.35
-                        send = min(int(max_send), max(int(needed * 1.42), needed + 4))
+                        send = min(int(max_send), max(int(needed * 1.44), needed + 4))
                     if send < needed or send < 2 or angle is None or needed == 0: continue
                 committed = pending.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
                 sc = score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, state, committed)

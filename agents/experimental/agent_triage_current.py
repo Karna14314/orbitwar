@@ -1,7 +1,7 @@
-# HYPOTHESIS: Stricter threat ETA and higher safety margin abandons bad planets sooner
-# DATE: 2026-06-08
-# BASED ON: champion.py
-# CHANGELOG: threat_eta to 20.0, safety_need buffer to 1.4
+# HYPOTHESIS: Abandon planets if 3+ enemies approaching and threat_eta < 22.0
+# ROUND: 1 | DATE: 2026-06-08
+# BASED ON: agents/champion.py
+# CHANGELOG: Lowered threat_eta cutoff to 22.0
 import math
 
 def spd(n):
@@ -195,10 +195,10 @@ def compute_moves(state, pid):
         closest_f, closest_dist = min(enemy_fleets, key=lambda x: x[1])
         threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
         # CHANGELOG: Threat ETA 35.0
-        if threat_eta >= 20.0: continue
+        if threat_eta >= 22.0: continue
         production_turns = int(math.floor(threat_eta))
         garrison = p['ships'] + p['prod'] * production_turns
-        safety_need = int(incoming_ships * 1.4 + 5)
+        safety_need = int(incoming_ships * 1.3 + 5)
         if garrison >= safety_need: continue
         deficit = safety_need - garrison
         if deficit < 3: continue
