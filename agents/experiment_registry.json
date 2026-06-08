@@ -103,6 +103,12 @@
             "score": 3,
             "failure_mode": "Tied in internal tournament, failed to advance",
             "changelog": "Increased safety buffer from 1.35 to 1.40"
+        },
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": true,
+            "score": 1250.0,
+            "changelog": "Modified threat_eta to 25.0, wave EV to 1.8, and buffer to 1.42"
         }
     ]
 }
