@@ -5,30 +5,41 @@ with open("best_agent.txt", "r") as f:
     best_agent = f.read().strip()
 champion = "submission.py"
 
+import concurrent.futures
+
 results = {"challenger": 0, "champion": 0, "ties": 0}
 
-for i in range(9):
-    print(f"Match {i+1}: {best_agent} vs {champion}")
+def run_champ_match(args):
+    i, ba, champ = args
     env = make("orbit_wars", configuration={"seed": 100 + i}, debug=False)
     try:
-        env.run([best_agent, champion])
+        env.run([ba, champ])
         final_step = env.steps[-1]
+        r0 = final_step[0].reward if final_step[0].reward is not None else 0
+        r1 = final_step[1].reward if final_step[1].reward is not None else 0
+        return (r0, r1, None)
+    except Exception as e:
+        return (0, 0, str(e))
 
-        p0_reward = final_step[0].reward if final_step[0].reward is not None else 0
-        p1_reward = final_step[1].reward if final_step[1].reward is not None else 0
+tasks = [(i, best_agent, champion) for i in range(9)]
 
-        if p0_reward > p1_reward:
+with concurrent.futures.ProcessPoolExecutor() as executor:
+    for res in executor.map(run_champ_match, tasks):
+        r0, r1, err = res
+        if err:
+            print(f"  Error: {err}")
+            results["champion"] += 1
+            continue
+
+        if r0 > r1:
             results["challenger"] += 1
             print("  Challenger won")
-        elif p1_reward > p0_reward:
+        elif r1 > r0:
             results["champion"] += 1
             print("  Champion won")
         else:
             results["ties"] += 1
             print("  Tie")
-    except Exception as e:
-        print(f"  Error: {e}")
-        results["champion"] += 1
 
 print("\n--- Final Series Results ---")
 print(f"Challenger ({best_agent}): {results['challenger']}")

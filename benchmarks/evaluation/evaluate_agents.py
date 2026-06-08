@@ -8,37 +8,50 @@ agents = [
     "agents/experimental/agent_hybrid_current.py"
 ]
 
+import concurrent.futures
+
 results = {agent: {"wins": 0, "losses": 0, "ties": 0, "score": 0} for agent in agents}
 
+def run_match(args):
+    i, j, match_idx, a1, a2 = args
+    env = make("orbit_wars", configuration={"seed": 42 + i + j + match_idx * 100}, debug=False)
+    try:
+        env.run([a1, a2])
+        final_step = env.steps[-1]
+        r0 = final_step[0].reward if final_step[0].reward is not None else 0
+        r1 = final_step[1].reward if final_step[1].reward is not None else 0
+        return (a1, a2, r0, r1, None)
+    except Exception as e:
+        return (a1, a2, 0, 0, str(e))
+
+tasks = []
 for i in range(len(agents)):
     for j in range(i + 1, len(agents)):
         for match_idx in range(10):
-            print(f"Match {match_idx+1}: {agents[i]} vs {agents[j]}")
-            env = make("orbit_wars", configuration={"seed": 42 + i + j + match_idx * 100}, debug=False)
-            try:
-                env.run([agents[i], agents[j]])
-                final_step = env.steps[-1]
+            tasks.append((i, j, match_idx, agents[i], agents[j]))
 
-                p0_reward = final_step[0].reward if final_step[0].reward is not None else 0
-                p1_reward = final_step[1].reward if final_step[1].reward is not None else 0
+with concurrent.futures.ProcessPoolExecutor() as executor:
+    for res in executor.map(run_match, tasks):
+        a1, a2, r0, r1, err = res
+        if err:
+            print(f"  Error: {err}")
+            continue
 
-                results[agents[i]]["score"] += p0_reward
-                results[agents[j]]["score"] += p1_reward
+        results[a1]["score"] += r0
+        results[a2]["score"] += r1
 
-                if p0_reward > p1_reward:
-                    results[agents[i]]["wins"] += 1
-                    results[agents[j]]["losses"] += 1
-                    print(f"  {agents[i]} won")
-                elif p1_reward > p0_reward:
-                    results[agents[j]]["wins"] += 1
-                    results[agents[i]]["losses"] += 1
-                    print(f"  {agents[j]} won")
-                else:
-                    results[agents[i]]["ties"] += 1
-                    results[agents[j]]["ties"] += 1
-                    print("  Tie")
-            except Exception as e:
-                print(f"  Error: {e}")
+        if r0 > r1:
+            results[a1]["wins"] += 1
+            results[a2]["losses"] += 1
+            print(f"  {a1} won")
+        elif r1 > r0:
+            results[a2]["wins"] += 1
+            results[a1]["losses"] += 1
+            print(f"  {a2} won")
+        else:
+            results[a1]["ties"] += 1
+            results[a2]["ties"] += 1
+            print("  Tie")
 
 print("\n--- Results ---")
 best_agent = None

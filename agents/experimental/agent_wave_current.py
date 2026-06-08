@@ -1,7 +1,7 @@
-# HYPOTHESIS: Aggressive wave expansion with 2.0 neutral inner-ring multiplier and 3.5 base neutral multiplier.
-# DATE: 2026-06-07
+# HYPOTHESIS: Higher early wave neutral EV multiplier speeds up early game map control
+# DATE: 2026-06-08
 # BASED ON: champion.py
-# CHANGELOG: Changed step < 60 ev *= 1.6 to 2.0, neutral_mult max to 3.5.
+# CHANGELOG: wave EV to 2.0
 import math
 
 def spd(n):
@@ -157,7 +157,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
     if is_co_orbit_adjacent(src, tgt): ev += 4000.0
     if tgt['owner'] == -1:
         if step < 60: ev *= 2.0
-        neutral_mult = max(1.0, 3.5 - (step / 400.0) * 2.5)
+        neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
         ev *= neutral_mult
         ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))
     enemy_planets = [p for p in planets if p['owner'] >= 0 and p['owner'] != pid]
@@ -195,7 +195,7 @@ def compute_moves(state, pid):
         closest_f, closest_dist = min(enemy_fleets, key=lambda x: x[1])
         threat_eta = closest_dist / max(spd(closest_f['ships']), 0.1)
         # CHANGELOG: Threat ETA 35.0
-        if threat_eta >= 30.0: continue
+        if threat_eta >= 25.0: continue
         production_turns = int(math.floor(threat_eta))
         garrison = p['ships'] + p['prod'] * production_turns
         safety_need = int(incoming_ships * 1.3 + 5)
@@ -254,7 +254,7 @@ def compute_moves(state, pid):
                             send = 0
                             break
                         # CHANGELOG: Buffer 1.35
-                        send = min(int(max_send), max(int(needed * 1.38), needed + 4))
+                        send = min(int(max_send), max(int(needed * 1.42), needed + 4))
                     if send < needed or send < 2 or angle is None or needed == 0: continue
                 committed = pending.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
                 sc = score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, state, committed)
