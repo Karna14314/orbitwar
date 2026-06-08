@@ -192,3 +192,16 @@ Challenger agents/experimental/agent_hybrid_current.py defeated champion. Update
 
 [2026-06-07]
 Challenger agents/experimental/agent_hybrid_current.py defeated champion. Updated champion. It modified threat_eta to 25.0, wave EV to 1.8, and buffer to 1.42.
+
+[2026-06-08]
+Experiments Run:
+- agent_wave_current.py: Wave EV 2.0. Result: 9 Wins, 20 Losses.
+- agent_speed_current.py: Speed buffer 1.48. Result: 13 Wins, 16 Losses.
+- agent_triage_current.py: Threat ETA 20.0, Buffer 1.4. Result: 18 Wins, 10 Losses. (Won internal tournament).
+- agent_hybrid_current.py: Threat ETA 22.0, Buffer 1.40, EV 1.9. Result: 17 Wins, 11 Losses.
+
+Champion Challenge:
+agent_triage_current.py lost to champion 4-5. Champion retains title.
+
+Failure Modes Identified:
+- Defensive triage with low threat ETA abandons planets too fast.
