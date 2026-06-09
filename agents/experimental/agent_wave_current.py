@@ -1,7 +1,7 @@
 # HYPOTHESIS: Higher early wave neutral EV multiplier speeds up early game map control
-# DATE: 2026-06-08
+# DATE: 2026-06-09
 # BASED ON: champion.py
-# CHANGELOG: wave EV to 2.0
+# CHANGELOG: wave EV to 2.1
 import math
 
 def spd(n):
@@ -156,7 +156,7 @@ def score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, stat
     if min_dist_to_us < 30.0: ev += (30.0 - min_dist_to_us) * 20.0
     if is_co_orbit_adjacent(src, tgt): ev += 4000.0
     if tgt['owner'] == -1:
-        if step < 60: ev *= 2.0
+        if step < 60: ev *= 2.1
         neutral_mult = max(1.0, 2.8 - (step / 400.0) * 1.8)
         ev *= neutral_mult
         ev += max(5.0, 250.0 - 0.6 * step - 25.0 * len(mine))

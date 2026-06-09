@@ -1,7 +1,7 @@
-# HYPOTHESIS: Very high speed safety buffer overwhelms opponent defenses
-# DATE: 2026-06-09
+# HYPOTHESIS: Hybrid approach tweaking ETA, wave EV, and buffer thresholds.
+# DATE: 2026-06-07
 # BASED ON: champion.py
-# CHANGELOG: speed buffer to 1.50
+# CHANGELOG: Modified threat_eta to 25.0, wave EV to 1.8, and buffer to 1.42.
 import math
 
 def spd(n):
@@ -254,7 +254,7 @@ def compute_moves(state, pid):
                             send = 0
                             break
                         # CHANGELOG: Buffer 1.35
-                        send = min(int(max_send), max(int(needed * 1.50), needed + 4))
+                        send = min(int(max_send), max(int(needed * 1.42), needed + 4))
                     if send < needed or send < 2 or angle is None or needed == 0: continue
                 committed = pending.get(tgt['id'], 0) + this_turn_sent.get(tgt['id'], 0)
                 sc = score_target(src, tgt, eta, is_comet, step, needed, mine, planets, pid, state, committed)

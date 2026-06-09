@@ -116,6 +116,33 @@
             "score": 0.0,
             "failure_mode": "Defensive triage with lower ETA abandons planets too fast under pressure, giving opponent more production over long games.",
             "changelog": "Threat ETA 20.0, Buffer 1.4"
+        },
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": true,
+            "score": 1260.0,
+            "changelog": "wave EV 2.1, threat_eta 28.0, buffer 1.50"
+        },
+        {
+            "agent": "agents/experimental/agent_wave_current.py",
+            "won": false,
+            "score": 0.0,
+            "failure_mode": "Failed in internal tournament against hybrid variant",
+            "changelog": "wave EV to 2.1"
+        },
+        {
+            "agent": "agents/experimental/agent_triage_current.py",
+            "won": false,
+            "score": 0.0,
+            "failure_mode": "Failed in internal tournament against hybrid variant",
+            "changelog": "threat_eta to 28.0"
+        },
+        {
+            "agent": "agents/experimental/agent_speed_current.py",
+            "won": false,
+            "score": 0.0,
+            "failure_mode": "Failed in internal tournament against hybrid variant",
+            "changelog": "speed buffer to 1.50"
         }
     ]
 }

@@ -205,3 +205,11 @@ agent_triage_current.py lost to champion 4-5. Champion retains title.
 
 Failure Modes Identified:
 - Defensive triage with low threat ETA abandons planets too fast.
+
+## 2026-06-09
+- Ran internal tournament to evaluate new experimental agents.
+- `agent_hybrid_current.py` was selected as the best performing agent.
+- Challenger `agent_hybrid_current.py` defeated the champion.
+- Updated `agents/champion.py` and `submission.py` with the winning code.
+- New parameters: wave EV 2.1, threat_eta 28.0, buffer 1.50.
+- New baseline score: 1260.0.
