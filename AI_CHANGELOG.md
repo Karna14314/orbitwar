@@ -205,3 +205,13 @@ agent_triage_current.py lost to champion 4-5. Champion retains title.
 
 Failure Modes Identified:
 - Defensive triage with low threat ETA abandons planets too fast.
+
+[2026-06-08 - Round 2]
+Experiments Run:
+- agent_wave_current.py: Wave EV 2.2.
+- agent_triage_current.py: Threat ETA 22.0.
+- agent_speed_current.py: Speed buffer 1.45.
+- agent_hybrid_current.py: Speed buffer 1.44, EV 2.0.
+
+Champion Challenge:
+agent_hybrid_current.py won the internal tournament and successfully defeated the champion. Updated champion.

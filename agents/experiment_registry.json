@@ -116,6 +116,12 @@
             "score": 0.0,
             "failure_mode": "Defensive triage with lower ETA abandons planets too fast under pressure, giving opponent more production over long games.",
             "changelog": "Threat ETA 20.0, Buffer 1.4"
+        },
+        {
+            "agent": "agents/experimental/agent_hybrid_current.py",
+            "won": true,
+            "score": 1260.0,
+            "changelog": "Combined speed buffer 1.44 and neutral EV 2.0"
         }
     ]
 }
